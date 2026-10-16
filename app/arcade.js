@@ -50,6 +50,14 @@ export default function Arcade() {
               </div>
             </section>
 
+            <section className="screen" data-screen="league" hidden>
+              <div className="scores-wrap">
+                <div className="sc-tab" id="lgTab"></div>
+                <ol className="sc-list" id="lgList"></ol>
+                <p className="sc-mine" id="lgNext"></p>
+              </div>
+            </section>
+
             <section className="screen" data-screen="help" hidden>
               <div className="scores-wrap">
                 <div className="sc-tab" id="hlpTab"></div>

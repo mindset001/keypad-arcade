@@ -113,6 +113,9 @@ body{
 .sc-list .empty{display:block; padding-top:3cqw; text-align:center}
 .sc-mine{margin:0; padding:.6cqw 3cqw; border-top:.4cqw dashed var(--ink-soft)}
 
+.sc-list li.me{background:var(--ink); color:var(--lcd)}
+.lcd.lit .sc-list li.me{color:var(--lcd-lit)}
+
 /* help */
 .hlp{list-style:none; margin:0; padding:.8cqw 3cqw; flex:1; overflow:hidden; font-size:6.2cqw; line-height:1.02}
 .hlp li{margin-bottom:1.6cqw}
