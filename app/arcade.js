@@ -10,7 +10,10 @@ export default function Arcade() {
 
   return (
     <>
-      <p className="brand">Keypad Arcade</p>
+      <header className="masthead">
+        <p className="brand">Keypad Arcade</p>
+        <p className="byline">A Demlinks game</p>
+      </header>
 
       <div className="phone" id="phone">
         <div className="earpiece" aria-hidden="true"></div>
@@ -69,8 +72,11 @@ export default function Arcade() {
 
         <div className="controls">
           <button className="key soft-key" data-k="sel" tabIndex={-1} aria-label="Select">Select</button>
-          <div className="rocker">
+          <div className="dpad" role="group" aria-label="Navigation">
             <button className="key" data-k="up" tabIndex={-1} aria-label="Up">▲</button>
+            <button className="key" data-k="left" tabIndex={-1} aria-label="Left">◀</button>
+            <span className="dpad-hub" aria-hidden="true"></span>
+            <button className="key" data-k="right" tabIndex={-1} aria-label="Right">▶</button>
             <button className="key" data-k="down" tabIndex={-1} aria-label="Down">▼</button>
           </div>
           <button className="key c-key" data-k="c" tabIndex={-1} aria-label="Back">C</button>
@@ -93,6 +99,8 @@ export default function Arcade() {
       </div>
 
       <p className="hint">Move with <kbd>←</kbd><kbd>↑</kbd><kbd>→</kbd><kbd>↓</kbd> or <kbd>2</kbd><kbd>4</kbd><kbd>6</kbd><kbd>8</kbd>. <kbd>Enter</kbd> or <kbd>5</kbd> selects, <kbd>Esc</kbd> goes back, <kbd>P</kbd> pauses, <kbd>M</kbd> mutes. On a phone, tap the keypad.</p>
+
+      <footer className="credit">Made by Demlinks · © {new Date().getFullYear()}</footer>
     </>
   );
 }
