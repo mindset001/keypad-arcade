@@ -1,0 +1,720 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Keypad Arcade</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap">
+<style>
+/* Layout: one handset on a dim desk. The LCD is the whole interface; the keypad below drives it. Single deliberate look (no light/dark split). */
+:root{
+  --desk:#12161e; --desk-2:#1f2633; --desk-ink:#8e99ad; --desk-ink-hi:#cfd6e2;
+  --shell:#2a3243; --shell-hi:#435069; --shell-lo:#151a23; --bezel:#0d1016;
+  --key:#2f3748; --key-hi:#47526a; --key-ink:#e3e8f0; --key-sub:#8f9bb3;
+  --lcd:#a3b688; --lcd-lit:#bcd394; --ink:#22301b; --ink-soft:#5c7149;
+  --accent:#9fd4a0;
+  --f-pixel:'Press Start 2P', ui-monospace, 'Courier New', monospace;
+  --f-lcd:'VT323', ui-monospace, 'Courier New', monospace;
+  --f-ui:system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  color-scheme:dark;
+}
+html,body{min-height:100%}
+body{
+  background-color:var(--desk);
+  background-image:radial-gradient(ellipse at 50% 30%, var(--desk-2), var(--desk) 70%);
+  color:var(--desk-ink-hi); font-family:var(--f-ui);
+  padding-left:max(16px, env(safe-area-inset-left, 0px));
+  padding-right:max(16px, env(safe-area-inset-right, 0px));
+  padding-block:20px 32px;
+  display:flex; flex-direction:column; align-items:center; gap:18px;
+}
+.brand{font-family:var(--f-pixel); font-size:11px; letter-spacing:.2em; color:var(--desk-ink); text-transform:uppercase; margin:0}
+
+/* ---------- handset ---------- */
+.phone{
+  width:min(340px,100%);
+  background:linear-gradient(155deg, var(--shell-hi), var(--shell) 38%, var(--shell-lo));
+  border-radius:52px 52px 70px 70px; padding:20px 18px 30px;
+  box-shadow:0 30px 60px rgba(0,0,0,.55), inset 0 2px 0 rgba(255,255,255,.08), inset 0 -4px 10px rgba(0,0,0,.35);
+  display:flex; flex-direction:column; gap:16px;
+}
+.earpiece{width:58px; height:6px; border-radius:3px; background:var(--bezel); margin:0 auto; box-shadow:inset 0 1px 2px rgba(0,0,0,.8)}
+.bezel{background:var(--bezel); border-radius:14px 14px 26px 26px; padding:12px; container-type:inline-size; box-shadow:inset 0 2px 6px rgba(0,0,0,.8)}
+
+/* ---------- LCD ---------- */
+.lcd{
+  position:relative; width:100%; aspect-ratio:128/112; overflow:hidden;
+  background:var(--lcd); color:var(--ink); font-family:var(--f-lcd);
+  display:grid; grid-template-rows:9.375cqw 1fr 9.375cqw;
+  box-shadow:inset 0 0 18px rgba(34,48,27,.35);
+  transition:background-color .4s ease;
+}
+.lcd.lit{background:var(--lcd-lit)}
+.lcd::after{ /* faint pixel grid */
+  content:""; position:absolute; inset:0; pointer-events:none;
+  background-image:linear-gradient(rgba(34,48,27,.07) 1px, transparent 1px), linear-gradient(90deg, rgba(34,48,27,.07) 1px, transparent 1px);
+  background-size:calc(100% / 64) calc(100% / 56);
+}
+.bar{display:flex; align-items:center; gap:2cqw; padding:0 2.5cqw; font-family:var(--f-pixel); font-size:3.2cqw; border-bottom:.5cqw solid var(--ink); min-width:0; font-variant-numeric:tabular-nums}
+.bar .sig{display:flex; align-items:flex-end; gap:.6cqw; height:3.4cqw}
+.bar .sig i{display:block; width:.9cqw; background:var(--ink)}
+.bar .sig i:nth-child(1){height:30%} .bar .sig i:nth-child(2){height:55%} .bar .sig i:nth-child(3){height:78%} .bar .sig i:nth-child(4){height:100%}
+#barL{flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+#barR{white-space:nowrap; max-width:45%; overflow:hidden; text-overflow:ellipsis}
+#barMute{font-size:2.6cqw; border:.4cqw solid var(--ink); padding:.4cqw .6cqw}
+.soft{display:grid; grid-template-columns:1fr auto 1fr; align-items:center; padding:0 2.5cqw; font-family:var(--f-pixel); font-size:3.2cqw; border-top:.5cqw solid var(--ink)}
+.soft span{cursor:pointer; white-space:nowrap}
+#skC{text-align:center} #skR{text-align:right}
+
+.screen{grid-row:2; grid-column:1; position:relative; overflow:hidden; min-height:0}
+
+/* lists (menu, options) */
+.list{list-style:none; margin:0; padding:1.5cqw 0; height:100%; overflow:hidden; position:relative; font-size:8cqw; line-height:1.12}
+.list li{display:flex; justify-content:space-between; gap:2cqw; padding:0 3cqw; cursor:pointer; white-space:nowrap}
+.list li.sel{background:var(--ink); color:var(--lcd)}
+.lcd.lit .list li.sel{color:var(--lcd-lit)}
+
+/* login */
+.login{display:flex; flex-direction:column; gap:1.6cqw; padding:1.6cqw 3cqw; height:100%; font-size:7cqw}
+.login .msg{margin:0; line-height:.95; min-height:2em; font-size:6.4cqw}
+.login input{
+  width:100%; box-sizing:border-box; font:inherit; color:var(--ink); background:transparent;
+  border:.6cqw solid var(--ink); padding:.2cqw 2cqw; border-radius:0; line-height:1.05;
+}
+.login input::placeholder{color:var(--ink-soft)}
+.login input:focus{outline:none; background:rgba(34,48,27,.14); box-shadow:inset 0 0 0 .5cqw var(--ink)}
+.login .row{display:grid; grid-template-columns:1fr 1fr; gap:1.6cqw}
+.login button{font:inherit; color:var(--ink); background:transparent; border:.6cqw solid var(--ink); padding:0 1cqw; line-height:1.15; cursor:pointer; border-radius:0}
+.login button:hover,.login button:focus-visible{background:var(--ink); color:var(--lcd); outline:none}
+.lcd.lit .login button:hover,.lcd.lit .login button:focus-visible{color:var(--lcd-lit)}
+.login .link{border-color:transparent; text-decoration:underline; text-underline-offset:.6cqw}
+
+/* scores */
+.scores-wrap{display:flex; flex-direction:column; height:100%; font-size:6.6cqw}
+.sc-tab{text-align:center; padding:.8cqw 0; border-bottom:.4cqw dashed var(--ink-soft)}
+.sc-list{list-style:none; margin:0; padding:0 3cqw; flex:1; overflow:hidden; position:relative; font-variant-numeric:tabular-nums}
+.sc-list li{display:grid; grid-template-columns:3ch 1fr auto; gap:1.5cqw; line-height:1.05}
+.sc-list li span:nth-child(2){overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.sc-list .empty{display:block; padding-top:3cqw; text-align:center}
+.sc-mine{margin:0; padding:.6cqw 3cqw; border-top:.4cqw dashed var(--ink-soft)}
+
+/* game */
+#cv{display:block; width:100%; height:100%; image-rendering:pixelated; image-rendering:crisp-edges}
+.ov{position:absolute; inset:0; display:grid; place-items:center}
+.ov-box{background:var(--lcd); border:.7cqw solid var(--ink); padding:2cqw 5cqw; text-align:center; box-shadow:1.2cqw 1.2cqw 0 var(--ink)}
+.lcd.lit .ov-box{background:var(--lcd-lit)}
+.ov-box h2{font-family:var(--f-pixel); font-size:4.4cqw; margin:0 0 1.6cqw; font-weight:400}
+.ov-box p{margin:0; font-size:7cqw; line-height:1; white-space:pre-line}
+
+/* ---------- keypad ---------- */
+.controls{display:grid; grid-template-columns:1fr 1.15fr 1fr; gap:12px; align-items:center}
+.numpad{display:grid; grid-template-columns:repeat(3,1fr); gap:9px 14px; padding:0 4px}
+.key{
+  appearance:none; border:0; cursor:pointer; color:var(--key-ink);
+  background:linear-gradient(180deg, var(--key-hi), var(--key));
+  border-radius:16px 16px 20px 20px; height:42px;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;
+  font:600 17px/1 var(--f-ui);
+  box-shadow:0 3px 0 var(--shell-lo), inset 0 1px 0 rgba(255,255,255,.14);
+  touch-action:manipulation; user-select:none; -webkit-user-select:none; -webkit-tap-highlight-color:transparent;
+  transition:transform .05s, box-shadow .05s, background .2s;
+}
+.key small{font:600 8.5px/1 var(--f-ui); letter-spacing:.14em; color:var(--key-sub); text-transform:uppercase}
+.key.down{transform:translateY(2px); box-shadow:0 1px 0 var(--shell-lo), inset 0 1px 0 rgba(255,255,255,.08)}
+.phone.lit .numpad .key{box-shadow:0 3px 0 var(--shell-lo), inset 0 1px 0 rgba(255,255,255,.14), 0 0 10px rgba(159,212,160,.18)}
+.phone.lit .numpad .key small{color:var(--accent)}
+.key.soft-key{height:38px; border-radius:20px; font-size:11px; letter-spacing:.12em; text-transform:uppercase}
+.key.c-key{height:38px; border-radius:20px}
+.rocker{display:flex; flex-direction:column; gap:3px}
+.rocker .key{height:30px; font-size:12px}
+.rocker .key:first-child{border-radius:22px 22px 6px 6px}
+.rocker .key:last-child{border-radius:6px 6px 22px 22px}
+
+.hint{max-width:340px; margin:0; text-align:center; font-size:13px; line-height:1.6; color:var(--desk-ink)}
+.hint kbd{font:600 11px/1 var(--f-ui); color:var(--desk-ink-hi); background:var(--shell); border-radius:4px; padding:2px 5px; box-shadow:0 1px 0 var(--shell-lo)}
+
+@media (prefers-reduced-motion: reduce){ .lcd, .key{transition:none} }
+</style>
+
+<p class="brand">Keypad Arcade</p>
+
+<div class="phone" id="phone">
+  <div class="earpiece" aria-hidden="true"></div>
+  <div class="bezel">
+    <div class="lcd" id="lcd">
+      <div class="bar">
+        <span class="sig" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+        <span id="barL">Welcome</span>
+        <span id="barMute" hidden>MUTE</span>
+        <span id="barR"></span>
+      </div>
+
+      <section class="screen" data-screen="login" hidden>
+        <form class="login" id="loginForm" novalidate autocomplete="on">
+          <p class="msg" id="loginMsg" role="status">Log in, or make a new player.</p>
+          <input id="user" name="username" autocomplete="username" placeholder="Player name" aria-label="Player name" maxlength="12" spellcheck="false" autocapitalize="off">
+          <input id="pass" name="password" type="password" autocomplete="current-password" placeholder="Password" aria-label="Password" maxlength="24">
+          <div class="row">
+            <button type="submit" id="btnLogin">Log in</button>
+            <button type="button" id="btnNew">New player</button>
+          </div>
+          <button type="button" class="link" id="btnGuest">Play as guest</button>
+        </form>
+      </section>
+
+      <section class="screen" data-screen="menu" hidden><ul class="list" id="menuList"></ul></section>
+      <section class="screen" data-screen="opts" hidden><ul class="list" id="optsList"></ul></section>
+
+      <section class="screen" data-screen="scores" hidden>
+        <div class="scores-wrap">
+          <div class="sc-tab" id="scTab"></div>
+          <ol class="sc-list" id="scList"></ol>
+          <p class="sc-mine" id="scMine"></p>
+        </div>
+      </section>
+
+      <section class="screen" data-screen="game" hidden>
+        <canvas id="cv" width="128" height="88" aria-label="Game screen"></canvas>
+        <div class="ov" id="ov" hidden><div class="ov-box"><h2 id="ovTitle">Paused</h2><p id="ovText"></p></div></div>
+      </section>
+
+      <div class="soft">
+        <span id="skL" role="button" tabindex="-1"></span>
+        <span id="skC"></span>
+        <span id="skR" role="button" tabindex="-1"></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button class="key soft-key" data-k="sel" tabindex="-1" aria-label="Select">Select</button>
+    <div class="rocker">
+      <button class="key" data-k="up" tabindex="-1" aria-label="Up">▲</button>
+      <button class="key" data-k="down" tabindex="-1" aria-label="Down">▼</button>
+    </div>
+    <button class="key c-key" data-k="c" tabindex="-1" aria-label="Back">C</button>
+  </div>
+
+  <div class="numpad">
+    <button class="key" data-k="1" tabindex="-1">1<small>&nbsp;</small></button>
+    <button class="key" data-k="2" tabindex="-1">2<small>abc ▲</small></button>
+    <button class="key" data-k="3" tabindex="-1">3<small>def</small></button>
+    <button class="key" data-k="4" tabindex="-1">4<small>◀ ghi</small></button>
+    <button class="key" data-k="5" tabindex="-1">5<small>jkl ●</small></button>
+    <button class="key" data-k="6" tabindex="-1">6<small>mno ▶</small></button>
+    <button class="key" data-k="7" tabindex="-1">7<small>pqrs</small></button>
+    <button class="key" data-k="8" tabindex="-1">8<small>tuv ▼</small></button>
+    <button class="key" data-k="9" tabindex="-1">9<small>wxyz</small></button>
+    <button class="key" data-k="*" tabindex="-1">*<small>pause</small></button>
+    <button class="key" data-k="0" tabindex="-1">0<small>&nbsp;</small></button>
+    <button class="key" data-k="#" tabindex="-1">#<small>sound</small></button>
+  </div>
+</div>
+
+<p class="hint">Move with <kbd>←</kbd><kbd>↑</kbd><kbd>→</kbd><kbd>↓</kbd> or <kbd>2</kbd><kbd>4</kbd><kbd>6</kbd><kbd>8</kbd>. <kbd>Enter</kbd> or <kbd>5</kbd> selects, <kbd>Esc</kbd> goes back, <kbd>P</kbd> pauses, <kbd>M</kbd> mutes. On a phone, tap the keypad.</p>
+
+<script>
+/* =====================================================================
+   Keypad Arcade — Snake Xenzia + Rapid Roll in a Nokia-style shell.
+   Sections: storage · auth · sound · screens · list view · snake ·
+             rapid roll · game loop · input · boot
+   NOTE: the login is a demo. Accounts live in this browser's
+   localStorage with SHA-256 hashed passwords; it is not real security.
+   ===================================================================== */
+const $ = s => document.querySelector(s);
+const lcd = $('#lcd'), phone = $('#phone');
+
+/* ---------- storage (falls back to memory if localStorage is blocked) ---------- */
+const mem = {};
+const store = {
+  get(k, d){ try{ const v = localStorage.getItem(k); if(v !== null) return JSON.parse(v); }catch(e){} return k in mem ? mem[k] : d; },
+  set(k, v){ mem[k] = v; try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} },
+  del(k){ delete mem[k]; try{ localStorage.removeItem(k); }catch(e){} }
+};
+
+/* ---------- auth ---------- */
+async function hash(s){
+  try{
+    const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s));
+    return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2,'0')).join('');
+  }catch(e){ let h = 5381; for(const c of s) h = ((h << 5) + h + c.charCodeAt(0)) | 0; return 'x' + (h >>> 0).toString(16); }
+}
+let user = null; // { name, guest }
+const loginMsg = t => { $('#loginMsg').textContent = t; sfx.err(); };
+
+async function doLogin(){
+  const n = $('#user').value.trim(), p = $('#pass').value;
+  if(!n || !p) return loginMsg('Enter a name and a password.');
+  const u = store.get('ka_users', {})[n.toLowerCase()];
+  if(!u) return loginMsg(`No player called ${n}. Tap New player.`);
+  if(await hash(n.toLowerCase() + ':' + p) !== u.hash) return loginMsg('Wrong password. Try again.');
+  signIn(u.name, false);
+}
+async function doCreate(){
+  const n = $('#user').value.trim(), p = $('#pass').value;
+  if(!n || !p) return loginMsg('Pick a name and a password first.');
+  if(!/^[A-Za-z0-9_]{2,12}$/.test(n)) return loginMsg('Name: 2 to 12 letters or numbers.');
+  if(n.toLowerCase() === 'guest') return loginMsg('That name is reserved. Pick another.');
+  if(p.length < 4) return loginMsg('Password needs 4 or more characters.');
+  const users = store.get('ka_users', {});
+  if(users[n.toLowerCase()]) return loginMsg('That name is taken. Log in instead.');
+  users[n.toLowerCase()] = { name:n, hash: await hash(n.toLowerCase() + ':' + p), at: Date.now() };
+  store.set('ka_users', users);
+  signIn(n, false);
+}
+function signIn(name, guest){
+  user = { name, guest };
+  if(!guest) store.set('ka_session', name.toLowerCase()); else store.del('ka_session');
+  $('#pass').value = '';
+  sfx.ok();
+  show('menu');
+}
+function logout(){ user = null; store.del('ka_session'); $('#loginMsg').textContent = 'Logged out. See you soon.'; show('login'); }
+
+/* ---------- sound (Web Audio beeps) ---------- */
+let actx = null, muted = !!store.get('ka_muted', false);
+function beep(f, d = .05, type = 'square', vol = .045, delay = 0){
+  if(muted) return;
+  try{
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    if(actx.state === 'suspended') actx.resume();
+    const t = actx.currentTime + delay, o = actx.createOscillator(), g = actx.createGain();
+    o.type = type; o.frequency.setValueAtTime(f, t);
+    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.0001, t + d);
+    o.connect(g).connect(actx.destination); o.start(t); o.stop(t + d + .02);
+  }catch(e){}
+}
+const sfx = {
+  key(){ beep(1400, .03, 'square', .025); },
+  click(){ beep(1100, .025, 'square', .03); },
+  ok(){ beep(880, .06); beep(1320, .08, 'square', .045, .07); },
+  err(){ beep(260, .12, 'square', .04); },
+  eat(){ beep(740, .04); },
+  bonus(){ beep(988, .05); beep(1319, .05, 'square', .045, .06); beep(1760, .07, 'square', .045, .12); },
+  land(){ beep(420, .02, 'triangle', .05); },
+  die(){ beep(330, .12, 'sawtooth', .05); beep(196, .3, 'sawtooth', .05, .12); },
+  over(){ beep(523, .12); beep(392, .12, 'square', .045, .14); beep(262, .3, 'square', .045, .28); }
+};
+function toggleMute(){
+  muted = !muted; store.set('ka_muted', muted); $('#barMute').hidden = !muted;
+  if(!muted) sfx.ok();
+  if(cur === 'menu') menuView.render();
+}
+
+/* ---------- screens ---------- */
+const screens = {}; let cur = null;
+function show(name, ...args){
+  if(cur && screens[cur].leave) screens[cur].leave();
+  document.querySelectorAll('.screen').forEach(el => el.hidden = el.dataset.screen !== name);
+  cur = name; screens[name].enter && screens[name].enter(...args);
+}
+const setBar = (l, r = '') => { $('#barL').textContent = l; $('#barR').textContent = r; };
+const setSoft = (l, c, r) => { $('#skL').textContent = l || ''; $('#skC').textContent = c || ''; $('#skR').textContent = r || ''; };
+
+/* backlight: lights up on any key, fades after a few seconds (stays on while playing) */
+let litTimer = 0;
+function wake(){
+  lcd.classList.add('lit'); phone.classList.add('lit'); clearTimeout(litTimer);
+  if(cur !== 'game') litTimer = setTimeout(() => { lcd.classList.remove('lit'); phone.classList.remove('lit'); }, 6000);
+}
+
+/* ---------- list view (Nokia style highlighted rows) ---------- */
+class ListView{
+  constructor(el){ this.el = el; this.items = []; this.i = 0; }
+  set(items, i = 0){ this.items = items; this.i = Math.max(0, Math.min(i, items.length - 1)); this.render(); }
+  render(){
+    this.el.textContent = '';
+    this.items.forEach((it, k) => {
+      const li = document.createElement('li');
+      const a = document.createElement('span'); a.textContent = typeof it.label === 'function' ? it.label() : it.label; li.appendChild(a);
+      if(it.value){ const b = document.createElement('span'); b.textContent = it.value(); li.appendChild(b); }
+      if(k === this.i) li.className = 'sel';
+      li.addEventListener('click', () => { wake(); this.i = k; this.render(); this.pick(); });
+      this.el.appendChild(li);
+    });
+    const s = this.el.querySelector('.sel');
+    if(s){ const top = s.offsetTop, bot = top + s.offsetHeight;
+      if(top < this.el.scrollTop) this.el.scrollTop = top;
+      else if(bot > this.el.scrollTop + this.el.clientHeight) this.el.scrollTop = bot - this.el.clientHeight; }
+  }
+  move(d){ this.i = (this.i + d + this.items.length) % this.items.length; sfx.click(); this.render(); }
+  pick(){ const it = this.items[this.i]; if(!it) return; if(it.cycle){ it.cycle(1); sfx.click(); this.render(); } else if(it.action){ sfx.click(); it.action(); } }
+  key(a){
+    if(a === 'up') this.move(-1);
+    else if(a === 'down') this.move(1);
+    else if(a === 'select') this.pick();
+    else if((a === 'left' || a === 'right') && this.items[this.i].cycle){ this.items[this.i].cycle(a === 'left' ? -1 : 1); sfx.click(); this.render(); }
+    else return false;
+    return true;
+  }
+}
+
+/* ---------- screen: login ---------- */
+screens.login = {
+  enter(){ setBar('Welcome'); setSoft('Select', '', ''); },
+  key(a){
+    const ctrls = ['#user','#pass','#btnLogin','#btnNew','#btnGuest'].map($);
+    let i = ctrls.indexOf(document.activeElement);
+    if(a === 'up' || a === 'down'){ i = i < 0 ? 0 : (i + (a === 'down' ? 1 : -1) + ctrls.length) % ctrls.length; ctrls[i].focus(); }
+    else if(a === 'select'){ if(i >= 2) ctrls[i].click(); else if(i === 0) ctrls[1].focus(); else doLogin(); }
+  }
+};
+$('#loginForm').addEventListener('submit', e => { e.preventDefault(); doLogin(); });
+$('#btnNew').addEventListener('click', doCreate);
+$('#btnGuest').addEventListener('click', () => signIn('Guest', true));
+
+/* ---------- screen: main menu ---------- */
+const GAMES = { snake:'Snake Xenzia', roll:'Rapid Roll' };
+const menuView = new ListView($('#menuList'));
+let menuIndex = 0;
+screens.menu = {
+  enter(){
+    setBar('Menu', user.name); setSoft('Select', '', '');
+    menuView.set([
+      { label: GAMES.snake, action: () => show('opts', 'snake') },
+      { label: GAMES.roll,  action: () => show('opts', 'roll') },
+      { label: 'High scores', action: () => show('scores') },
+      { label: 'Sound', value: () => muted ? 'Off' : 'On', cycle: () => toggleMute() },
+      { label: user.guest ? 'Exit guest' : 'Log out', action: logout }
+    ], menuIndex);
+  },
+  leave(){ menuIndex = menuView.i; },
+  key(a){ menuView.key(a); }
+};
+
+/* ---------- screen: game options ---------- */
+const MAZES = ['No maze','Box','Tunnel','Mill','Rails'];
+const optsView = new ListView($('#optsList'));
+function prefsFor(g){
+  const all = store.get('ka_prefs', {}), k = (user ? user.name.toLowerCase() : '') + ':' + g;
+  return Object.assign(g === 'snake' ? { level:5, maze:0 } : { level:3 }, all[k] || {});
+}
+function savePrefs(g, p){ const all = store.get('ka_prefs', {}); all[(user ? user.name.toLowerCase() : '') + ':' + g] = p; store.set('ka_prefs', all); }
+screens.opts = {
+  enter(g){
+    this.g = g = g || this.g; const p = prefsFor(g);
+    setBar(GAMES[g], ''); setSoft('Select', '', 'Back');
+    const items = [
+      { label: 'Start game', action: () => show('game', g, p) },
+      { label: 'Level', value: () => `◂ ${p.level} ▸`, cycle: d => { p.level = (p.level - 1 + d + 9) % 9 + 1; savePrefs(g, p); } }
+    ];
+    if(g === 'snake') items.push({ label: 'Maze', value: () => `◂ ${MAZES[p.maze]} ▸`, cycle: d => { p.maze = (p.maze + d + MAZES.length) % MAZES.length; savePrefs(g, p); } });
+    items.push({ label: 'High scores', action: () => show('scores', g) });
+    optsView.set(items, 0);
+  },
+  key(a){ if(a === 'back'){ sfx.click(); show('menu'); } else optsView.key(a); }
+};
+
+/* ---------- high scores ---------- */
+function saveScore(g, score){
+  const best = store.get('ka_best', {}), bk = user.name.toLowerCase() + ':' + g, prev = best[bk] || 0;
+  if(score <= 0) return { isNew:false, best:prev };
+  const all = store.get('ka_scores', {}), list = all[g] || [];
+  list.push({ name:user.name, score, at:Date.now() });
+  list.sort((a, b) => b.score - a.score || a.at - b.at);
+  all[g] = list.slice(0, 10); store.set('ka_scores', all);
+  if(score > prev){ best[bk] = score; store.set('ka_best', best); }
+  return { isNew: score > prev, best: Math.max(prev, score) };
+}
+screens.scores = {
+  enter(g){ this.from = cur === 'opts' ? 'opts' : 'menu'; this.g = g || 'snake'; setBar('High scores'); setSoft('', 'Game ◂▸', 'Back'); this.render(); },
+  render(){
+    $('#scTab').textContent = `◂ ${GAMES[this.g]} ▸`;
+    const list = (store.get('ka_scores', {})[this.g]) || [], ol = $('#scList');
+    ol.textContent = ''; ol.scrollTop = 0;
+    if(!list.length){ const li = document.createElement('li'); li.className = 'empty'; li.textContent = 'No scores yet. Set the first one.'; ol.appendChild(li); }
+    list.forEach((r, i) => {
+      const li = document.createElement('li');
+      [String(i + 1) + '.', r.name, String(r.score)].forEach(t => { const s = document.createElement('span'); s.textContent = t; li.appendChild(s); });
+      ol.appendChild(li);
+    });
+    const mine = store.get('ka_best', {})[user.name.toLowerCase() + ':' + this.g] || 0;
+    $('#scMine').textContent = `Your best: ${mine}`;
+  },
+  key(a){
+    const ol = $('#scList'), row = ol.firstElementChild ? ol.firstElementChild.offsetHeight : 20;
+    if(a === 'left' || a === 'right' || a === 'select'){ this.g = this.g === 'snake' ? 'roll' : 'snake'; sfx.click(); this.render(); }
+    else if(a === 'down') ol.scrollTop += row; else if(a === 'up') ol.scrollTop -= row;
+    else if(a === 'back'){ sfx.click(); this.from === 'opts' ? show('opts', this.g) : show('menu'); }
+  }
+};
+
+/* ---------- drawing helpers ---------- */
+const cv = $('#cv'), ctx = cv.getContext('2d');
+const INK = '#22301b';
+function blit(mask, x, y){ for(let r = 0; r < mask.length; r++) for(let c = 0; c < mask[r].length; c++) if(mask[r][c] === '1') ctx.fillRect(x + c, y + r, 1, 1); }
+const pad = (n, w) => String(n).padStart(w, '0');
+
+/* ---------- game: Snake Xenzia ---------- */
+const COLS = 32, ROWS = 22, CELL = 4;
+const SNAKE_SPEED = [0, .25, .21, .175, .145, .12, .1, .082, .066, .052]; // seconds per step, by level
+const FOOD = ['010','101','010'];
+const BUG  = ['1001','0110','1111','1001'];
+function wallsFor(m){
+  const s = new Set(), add = (x, y) => s.add(y * COLS + x);
+  const border = gaps => {
+    for(let x = 0; x < COLS; x++) if(!(gaps && x >= 13 && x <= 18)){ add(x, 0); add(x, ROWS - 1); }
+    for(let y = 0; y < ROWS; y++) if(!(gaps && y >= 8 && y <= 13)){ add(0, y); add(COLS - 1, y); }
+  };
+  if(m === 1) border(false);
+  if(m === 2){ border(true); for(let x = 8; x <= 23; x++){ add(x, 6); add(x, 15); } }
+  if(m === 3){ border(false); for(let y = 3; y <= 8; y++) add(8, y); for(let y = 13; y <= 18; y++) add(23, y); for(let x = 14; x <= 25; x++) add(x, 5); for(let x = 6; x <= 17; x++) add(x, 16); }
+  if(m === 4){ for(let x = 4; x <= 27; x++){ add(x, 6); add(x, 15); } }
+  return s;
+}
+class Snake{
+  constructor(o){
+    this.level = o.level; this.maze = o.maze; this.walls = wallsFor(o.maze);
+    this.body = []; for(let i = 0; i < 5; i++) this.body.push({ x:10 - i, y:11 });
+    this.dir = { x:1, y:0 }; this.q = []; this.t = 0; this.iv = SNAKE_SPEED[this.level];
+    this.score = 0; this.eaten = 0; this.bug = null; this.food = null; this.dead = false; this.deathT = 0; this.done = false;
+    this.food = this.free();
+  }
+  taken(x, y){
+    return this.walls.has(y * COLS + x) || this.body.some(s => s.x === x && s.y === y)
+      || (this.food && this.food.x === x && this.food.y === y) || (this.bug && this.bug.x === x && this.bug.y === y);
+  }
+  free(){ for(let n = 0; n < 3000; n++){ const x = Math.random() * COLS | 0, y = Math.random() * ROWS | 0; if(!this.taken(x, y)) return { x, y }; } return { x:1, y:1 }; }
+  key(a){
+    const D = { up:{x:0,y:-1}, down:{x:0,y:1}, left:{x:-1,y:0}, right:{x:1,y:0} }[a]; if(!D) return;
+    const last = this.q.length ? this.q[this.q.length - 1] : this.dir;
+    if((D.x === last.x && D.y === last.y) || (D.x === -last.x && D.y === -last.y)) return; // no 180° turns
+    if(this.q.length < 3) this.q.push(D);
+  }
+  update(dt){
+    if(this.done) return;
+    if(this.dead){ this.deathT += dt; if(this.deathT > 1.2){ this.done = true; this.onOver(this.score); } return; }
+    if(this.bug && (this.bug.ttl -= dt) <= 0) this.bug = null;
+    this.t += dt;
+    while(this.t >= this.iv){ this.t -= this.iv; this.step(); if(this.dead) break; }
+  }
+  step(){
+    if(this.q.length) this.dir = this.q.shift();
+    const h = this.body[0], x = (h.x + this.dir.x + COLS) % COLS, y = (h.y + this.dir.y + ROWS) % ROWS;
+    const eat = this.food && this.food.x === x && this.food.y === y;
+    const hitSelf = this.body.some((s, i) => s.x === x && s.y === y && !(i === this.body.length - 1 && !eat));
+    if(this.walls.has(y * COLS + x) || hitSelf){ this.dead = true; sfx.die(); return; }
+    this.body.unshift({ x, y });
+    if(eat){
+      this.score += this.level; this.eaten++; sfx.eat(); this.food = null;
+      if(this.eaten % 5 === 0){ this.bug = null; const p = this.free(); this.bug = { ...p, ttl:6 }; }
+      this.food = this.free();
+    } else this.body.pop();
+    if(this.bug && this.bug.x === x && this.bug.y === y){ this.score += this.level * 5 + Math.ceil(this.bug.ttl) * this.level; this.bug = null; sfx.bonus(); }
+  }
+  hud(){ return [pad(this.score, 4), this.bug ? `Bug ${Math.ceil(this.bug.ttl)}` : `Lv ${this.level}`]; }
+  draw(){
+    ctx.clearRect(0, 0, 128, 88); ctx.fillStyle = INK;
+    for(const k of this.walls){ const x = (k % COLS) * CELL, y = ((k / COLS) | 0) * CELL; ctx.fillRect(x, y, 4, 4); ctx.clearRect(x + 1, y + 1, 2, 2); }
+    if(this.food) blit(FOOD, this.food.x * CELL, this.food.y * CELL);
+    if(this.bug && !(this.bug.ttl < 2 && Math.floor(this.bug.ttl * 6) % 2)) blit(BUG, this.bug.x * CELL, this.bug.y * CELL);
+    if(this.dead && Math.floor(this.deathT * 8) % 2) return;
+    const b = this.body;
+    for(let i = 0; i < b.length; i++){
+      const s = b[i], x = s.x * CELL, y = s.y * CELL; ctx.fillRect(x, y, 3, 3);
+      if(i > 0){ const p = b[i - 1];
+        if(p.y === s.y && p.x === s.x + 1) ctx.fillRect(x + 3, y, 1, 3);
+        if(p.y === s.y && p.x === s.x - 1) ctx.fillRect(x - 1, y, 1, 3);
+        if(p.x === s.x && p.y === s.y + 1) ctx.fillRect(x, y + 3, 3, 1);
+        if(p.x === s.x && p.y === s.y - 1) ctx.fillRect(x, y - 1, 3, 1);
+      }
+    }
+    ctx.clearRect(b[0].x * CELL + 1, b[0].y * CELL + 1, 1, 1); // eye
+  }
+}
+
+/* ---------- game: Rapid Roll ---------- */
+const RW = 128, RH = 88, SPK = 5, PW = 22, GAP = 17, BR = 2.5;
+const BALL  = ['01110','10111','11111','11111','01110'];
+const HEART = ['01010','11111','01110','00100'];
+class Roll{
+  constructor(o){
+    this.level = o.level; this.lives = 3; this.score = 0; this.dist = 0; this.t = 0;
+    this.plats = []; this.held = { left:false, right:false }; this.freeze = 0; this.inv = 0; this.done = false;
+    for(let y = 28; y < RH + GAP; y += GAP) this.addPlat(y, true);
+    const p = this.plats[1];
+    this.ball = { x:p.x + PW / 2, y:p.y - BR, vy:0, on:p };
+  }
+  addPlat(y, safe){
+    const last = this.plats[this.plats.length - 1];
+    const x = 2 + Math.random() * (RW - PW - 4);
+    const spiked = !safe && !(last && last.spiked) && Math.random() < Math.min(.28, .12 + this.t * .003);
+    const heart = !safe && !spiked && this.lives < 9 && Math.random() < .05;
+    this.plats.push({ x, y, py:y, spiked, heart });
+  }
+  get speed(){ return 12 + this.level * 3 + Math.min(32, this.t * .35); }
+  key(a){ if(a in this.held) this.held[a] = true; }
+  keyUp(a){ if(a in this.held) this.held[a] = false; }
+  hit(){ this.lives--; sfx.die(); this.freeze = 1; }
+  respawn(){
+    let p = this.plats.filter(q => !q.spiked && q.y > 30 && q.y < 72).sort((a, b) => Math.abs(a.y - 50) - Math.abs(b.y - 50))[0];
+    if(!p){ p = { x:RW / 2 - PW / 2, y:50, py:50, spiked:false, heart:false }; this.plats.push(p); this.plats.sort((a, b) => a.y - b.y); }
+    Object.assign(this.ball, { x:p.x + PW / 2, y:p.y - BR, vy:0, on:p }); this.inv = 1.6;
+  }
+  update(dt){
+    if(this.done) return;
+    if(this.freeze > 0){
+      this.freeze -= dt;
+      if(this.freeze <= 0){ if(this.lives <= 0){ this.done = true; this.onOver(this.score); return; } this.respawn(); }
+      return;
+    }
+    this.t += dt; if(this.inv > 0) this.inv -= dt;
+    const v = this.speed;
+    for(const p of this.plats){ p.py = p.y; p.y -= v * dt; }
+    this.plats = this.plats.filter(p => p.y > -6);
+    let bottom = this.plats.reduce((m, p) => Math.max(m, p.y), -Infinity);
+    while(bottom <= RH){ this.addPlat(bottom + GAP, false); bottom += GAP; }
+    this.dist += v * dt; this.score = Math.floor(this.dist / 8) * this.level;
+
+    const b = this.ball, dir = (this.held.right ? 1 : 0) - (this.held.left ? 1 : 0);
+    b.x = Math.max(BR, Math.min(RW - BR, b.x + dir * 60 * dt));
+    if(b.on){
+      const p = b.on;
+      if(!this.plats.includes(p) || b.x < p.x - 1 || b.x > p.x + PW + 1){ b.on = null; b.vy = 12; }
+      else{
+        b.y = p.y - BR;
+        if(p.heart && Math.abs(b.x - (p.x + PW / 2)) < 5){ p.heart = false; this.lives = Math.min(9, this.lives + 1); sfx.bonus(); }
+      }
+    }
+    if(!b.on){
+      const prevBottom = b.y + BR;
+      b.vy = Math.min(95, b.vy + 240 * dt); b.y += b.vy * dt;
+      const nb = b.y + BR;
+      for(const p of this.plats){
+        if(prevBottom <= p.py + .01 && nb >= p.y && b.x >= p.x - 1 && b.x <= p.x + PW + 1){
+          if(p.spiked && this.inv <= 0){ this.hit(); return; }
+          b.on = p; b.vy = 0; b.y = p.y - BR; sfx.land(); break;
+        }
+      }
+    }
+    if(b.y - BR <= SPK){ if(this.inv > 0){ b.on = null; b.vy = 20; b.y = SPK + BR + .5; } else { this.hit(); return; } }
+    if(b.y - BR > RH){ this.hit(); return; }
+  }
+  hud(){ return [pad(this.score, 5), `♥×${Math.max(0, this.lives)}`]; }
+  draw(){
+    ctx.clearRect(0, 0, RW, RH); ctx.fillStyle = INK;
+    const ins = [0, 0, 1, 1, 2];
+    for(let x = 0; x < RW; x += 6) for(let r = 0; r < 5; r++) ctx.fillRect(x + ins[r], r, 6 - 2 * ins[r], 1);
+    for(const p of this.plats){
+      const x = Math.round(p.x), y = Math.round(p.y);
+      if(p.spiked){
+        ctx.fillRect(x, y, PW, 3);
+        for(let i = 1; i + 3 <= PW; i += 4){ ctx.fillRect(x + i + 1, y - 3, 1, 1); ctx.fillRect(x + i, y - 2, 3, 2); }
+      } else {
+        ctx.fillRect(x, y, PW, 1); ctx.fillRect(x, y + 2, PW, 1);
+        for(let i = 0; i < PW; i += 3) ctx.fillRect(x + i, y + 1, 1, 1);
+        if(p.heart && Math.floor(this.t * 4) % 2) blit(HEART, Math.round(p.x + PW / 2 - 2), y - 5);
+        else if(p.heart) blit(HEART, Math.round(p.x + PW / 2 - 2), y - 5);
+      }
+    }
+    const b = this.ball;
+    const blink = (this.freeze > 0 && Math.floor(this.freeze * 10) % 2) || (this.inv > 0 && Math.floor(this.inv * 10) % 2);
+    if(!blink) blit(BALL, Math.round(b.x) - 2, Math.round(b.y) - 2);
+  }
+}
+
+/* ---------- game screen + loop (fixed timestep) ---------- */
+const STEP = 1 / 120;
+const G = { id:null, opts:null, obj:null, state:'play', raf:0, last:0, acc:0, hud:'' };
+function newGame(){
+  G.obj = G.id === 'snake' ? new Snake(G.opts) : new Roll(G.opts);
+  G.obj.onOver = endGame; G.state = 'play'; G.acc = 0; $('#ov').hidden = true;
+  setSoft('Pause', '', '');
+}
+function loop(t){
+  G.raf = requestAnimationFrame(loop);
+  const dt = Math.min(.1, (t - G.last) / 1000 || 0); G.last = t;
+  if(G.state === 'play'){
+    G.acc += dt;
+    while(G.acc >= STEP){ G.obj.update(STEP); G.acc -= STEP; if(G.state !== 'play') break; }
+  }
+  G.obj.draw();
+  const [l, r] = G.obj.hud(), s = l + '|' + r;
+  if(s !== G.hud){ G.hud = s; setBar(l, r); }
+}
+function overlay(title, text){ $('#ovTitle').textContent = title; $('#ovText').textContent = text; $('#ov').hidden = false; }
+function pauseGame(){
+  if(cur !== 'game' || G.state !== 'play') return;
+  G.state = 'paused'; overlay('Paused', GAMES[G.id]); setSoft('Resume', '', 'Quit');
+  if(G.obj.held){ G.obj.held.left = G.obj.held.right = false; }
+}
+function resumeGame(){ G.state = 'play'; $('#ov').hidden = true; setSoft('Pause', '', ''); G.last = performance.now(); }
+function endGame(score){
+  G.state = 'over'; sfx.over();
+  const r = saveScore(G.id, score);
+  overlay('Game over', `Score ${score}\n${r.isNew ? 'New best!' : 'Best ' + r.best}`);
+  setSoft('Again', '', 'Menu');
+}
+screens.game = {
+  enter(id, opts){
+    G.id = id; G.opts = { ...opts }; G.hud = ''; newGame();
+    lcd.classList.add('lit'); phone.classList.add('lit'); clearTimeout(litTimer);
+    G.last = performance.now(); cancelAnimationFrame(G.raf); G.raf = requestAnimationFrame(loop);
+  },
+  leave(){ cancelAnimationFrame(G.raf); $('#ov').hidden = true; wake(); },
+  key(a){
+    if(G.state === 'play'){
+      if(a === 'select' || a === 'pause' || a === 'back') pauseGame();
+      else G.obj.key(a);
+    } else if(G.state === 'paused'){
+      if(a === 'select' || a === 'pause') resumeGame();
+      else if(a === 'back') show('opts', G.id);
+    } else if(G.state === 'over'){
+      if(a === 'select'){ newGame(); G.last = performance.now(); }
+      else if(a === 'back') show('opts', G.id);
+    }
+  },
+  keyUp(a){ if(G.obj && G.obj.keyUp) G.obj.keyUp(a); }
+};
+document.addEventListener('visibilitychange', () => { if(document.hidden) pauseGame(); });
+window.addEventListener('blur', pauseGame);
+
+/* ---------- input ---------- */
+function press(a){ wake(); if(a === 'mute'){ toggleMute(); return; } const s = screens[cur]; s && s.key && s.key(a); }
+function release(a){ const s = screens[cur]; s && s.keyUp && s.keyUp(a); }
+
+const KEYMAP = {
+  ArrowUp:'up', ArrowDown:'down', ArrowLeft:'left', ArrowRight:'right',
+  w:'up', s:'down', a:'left', d:'right', W:'up', S:'down', A:'left', D:'right',
+  '2':'up', '8':'down', '4':'left', '6':'right', '5':'select',
+  Enter:'select', ' ':'select', Escape:'back', Backspace:'back', p:'pause', P:'pause', m:'mute', M:'mute'
+};
+const DIRS = ['up','down','left','right'];
+window.addEventListener('keydown', e => {
+  const a = KEYMAP[e.key]; if(!a) return;
+  if(cur === 'login'){ if(e.key === 'ArrowUp' || e.key === 'ArrowDown'){ e.preventDefault(); press(a); } return; }
+  if(e.target && e.target.tagName === 'INPUT') return;
+  e.preventDefault();
+  if(e.repeat && !DIRS.includes(a)) return;
+  press(a);
+});
+window.addEventListener('keyup', e => { const a = KEYMAP[e.key]; if(a) release(a); });
+window.addEventListener('blur', () => DIRS.forEach(release));
+
+/* on-screen keypad: hold-aware, never steals focus */
+const PADMAP = { sel:'select', c:'back', up:'up', down:'down', '2':'up', '8':'down', '4':'left', '6':'right', '5':'select', '*':'pause', '#':'mute' };
+document.querySelectorAll('.key').forEach(btn => {
+  const a = PADMAP[btn.dataset.k];
+  let held = false;
+  const down = e => {
+    e.preventDefault(); btn.classList.add('down'); held = true;
+    if(!(cur === 'game' && G.state === 'play')) sfx.key();
+    if(a) press(a); else wake();
+  };
+  const up = () => { if(!held) return; held = false; btn.classList.remove('down'); if(a) release(a); };
+  btn.addEventListener('pointerdown', down);
+  ['pointerup','pointerleave','pointercancel'].forEach(t => btn.addEventListener(t, up));
+  btn.addEventListener('contextmenu', e => e.preventDefault());
+});
+$('#skL').addEventListener('click', () => press('select'));
+$('#skR').addEventListener('click', () => press('back'));
+
+/* ---------- boot ---------- */
+(function boot(){
+  $('#barMute').hidden = !muted;
+  const sess = store.get('ka_session', null), u = sess && store.get('ka_users', {})[sess];
+  if(u){ user = { name:u.name, guest:false }; show('menu'); } else show('login');
+  wake();
+})();
+</script>
+
+</body></html>
