@@ -1,0 +1,134 @@
+/* base reset carried over from the original page shell */
+:root{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif}
+img{max-width:100%}
+[hidden]:not([hidden=until-found i]){display:none!important}
+
+:root{
+  --desk:#12161e; --desk-2:#1f2633; --desk-ink:#8e99ad; --desk-ink-hi:#cfd6e2;
+  --shell:#2a3243; --shell-hi:#435069; --shell-lo:#151a23; --bezel:#0d1016;
+  --key:#2f3748; --key-hi:#47526a; --key-ink:#e3e8f0; --key-sub:#8f9bb3;
+  --lcd:#a3b688; --lcd-lit:#bcd394; --ink:#22301b; --ink-soft:#5c7149;
+  --accent:#9fd4a0;
+  --f-pixel:var(--font-pixel), ui-monospace, 'Courier New', monospace;
+  --f-lcd:var(--font-lcd), ui-monospace, 'Courier New', monospace;
+  --f-ui:system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  color-scheme:dark;
+}
+html,body{min-height:100%}
+body{
+  background-color:var(--desk);
+  background-image:radial-gradient(ellipse at 50% 30%, var(--desk-2), var(--desk) 70%);
+  color:var(--desk-ink-hi); font-family:var(--f-ui);
+  padding-left:max(16px, env(safe-area-inset-left, 0px));
+  padding-right:max(16px, env(safe-area-inset-right, 0px));
+  padding-block:20px 32px;
+  display:flex; flex-direction:column; align-items:center; gap:18px;
+}
+.brand{font-family:var(--f-pixel); font-size:11px; letter-spacing:.2em; color:var(--desk-ink); text-transform:uppercase; margin:0}
+
+/* ---------- handset ---------- */
+.phone{
+  width:min(340px,100%);
+  background:linear-gradient(155deg, var(--shell-hi), var(--shell) 38%, var(--shell-lo));
+  border-radius:52px 52px 70px 70px; padding:20px 18px 30px;
+  box-shadow:0 30px 60px rgba(0,0,0,.55), inset 0 2px 0 rgba(255,255,255,.08), inset 0 -4px 10px rgba(0,0,0,.35);
+  display:flex; flex-direction:column; gap:16px;
+}
+.earpiece{width:58px; height:6px; border-radius:3px; background:var(--bezel); margin:0 auto; box-shadow:inset 0 1px 2px rgba(0,0,0,.8)}
+.bezel{background:var(--bezel); border-radius:14px 14px 26px 26px; padding:12px; container-type:inline-size; box-shadow:inset 0 2px 6px rgba(0,0,0,.8)}
+
+/* ---------- LCD ---------- */
+.lcd{
+  position:relative; width:100%; aspect-ratio:128/112; overflow:hidden;
+  background:var(--lcd); color:var(--ink); font-family:var(--f-lcd);
+  display:grid; grid-template-rows:9.375cqw 1fr 9.375cqw;
+  box-shadow:inset 0 0 18px rgba(34,48,27,.35);
+  transition:background-color .4s ease;
+}
+.lcd.lit{background:var(--lcd-lit)}
+.lcd::after{ /* faint pixel grid */
+  content:""; position:absolute; inset:0; pointer-events:none;
+  background-image:linear-gradient(rgba(34,48,27,.07) 1px, transparent 1px), linear-gradient(90deg, rgba(34,48,27,.07) 1px, transparent 1px);
+  background-size:calc(100% / 64) calc(100% / 56);
+}
+.bar{display:flex; align-items:center; gap:2cqw; padding:0 2.5cqw; font-family:var(--f-pixel); font-size:3.2cqw; border-bottom:.5cqw solid var(--ink); min-width:0; font-variant-numeric:tabular-nums}
+.bar .sig{display:flex; align-items:flex-end; gap:.6cqw; height:3.4cqw}
+.bar .sig i{display:block; width:.9cqw; background:var(--ink)}
+.bar .sig i:nth-child(1){height:30%} .bar .sig i:nth-child(2){height:55%} .bar .sig i:nth-child(3){height:78%} .bar .sig i:nth-child(4){height:100%}
+#barL{flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+#barR{white-space:nowrap; max-width:45%; overflow:hidden; text-overflow:ellipsis}
+#barMute{font-size:2.6cqw; border:.4cqw solid var(--ink); padding:.4cqw .6cqw}
+.soft{display:grid; grid-template-columns:1fr auto 1fr; align-items:center; padding:0 2.5cqw; font-family:var(--f-pixel); font-size:3.2cqw; border-top:.5cqw solid var(--ink)}
+.soft span{cursor:pointer; white-space:nowrap}
+#skC{text-align:center} #skR{text-align:right}
+
+.screen{grid-row:2; grid-column:1; position:relative; overflow:hidden; min-height:0}
+
+/* lists (menu, options) */
+.list{list-style:none; margin:0; padding:1.5cqw 0; height:100%; overflow:hidden; position:relative; font-size:8cqw; line-height:1.12}
+.list li{display:flex; justify-content:space-between; gap:2cqw; padding:0 3cqw; cursor:pointer; white-space:nowrap}
+.list li.sel{background:var(--ink); color:var(--lcd)}
+.lcd.lit .list li.sel{color:var(--lcd-lit)}
+
+/* login */
+.login{display:flex; flex-direction:column; gap:1.6cqw; padding:1.6cqw 3cqw; height:100%; font-size:7cqw}
+.login .msg{margin:0; line-height:.95; min-height:2em; font-size:6.4cqw}
+.login input{
+  width:100%; box-sizing:border-box; font:inherit; color:var(--ink); background:transparent;
+  border:.6cqw solid var(--ink); padding:.2cqw 2cqw; border-radius:0; line-height:1.05;
+}
+.login input::placeholder{color:var(--ink-soft)}
+.login input:focus{outline:none; background:rgba(34,48,27,.14); box-shadow:inset 0 0 0 .5cqw var(--ink)}
+.login .row{display:grid; grid-template-columns:1fr 1fr; gap:1.6cqw}
+.login button{font:inherit; color:var(--ink); background:transparent; border:.6cqw solid var(--ink); padding:0 1cqw; line-height:1.15; cursor:pointer; border-radius:0}
+.login button:hover,.login button:focus-visible{background:var(--ink); color:var(--lcd); outline:none}
+.lcd.lit .login button:hover,.lcd.lit .login button:focus-visible{color:var(--lcd-lit)}
+.login .link{border-color:transparent; text-decoration:underline; text-underline-offset:.6cqw}
+
+/* scores */
+.scores-wrap{display:flex; flex-direction:column; height:100%; font-size:6.6cqw}
+.sc-tab{text-align:center; padding:.8cqw 0; border-bottom:.4cqw dashed var(--ink-soft)}
+.sc-list{list-style:none; margin:0; padding:0 3cqw; flex:1; overflow:hidden; position:relative; font-variant-numeric:tabular-nums}
+.sc-list li{display:grid; grid-template-columns:3ch 1fr auto; gap:1.5cqw; line-height:1.05}
+.sc-list li span:nth-child(2){overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.sc-list .empty{display:block; padding-top:3cqw; text-align:center}
+.sc-mine{margin:0; padding:.6cqw 3cqw; border-top:.4cqw dashed var(--ink-soft)}
+
+/* game */
+#cv{display:block; width:100%; height:100%; image-rendering:pixelated; image-rendering:crisp-edges}
+.ov{position:absolute; inset:0; display:grid; place-items:center}
+.ov-box{background:var(--lcd); border:.7cqw solid var(--ink); padding:2cqw 5cqw; text-align:center; box-shadow:1.2cqw 1.2cqw 0 var(--ink)}
+.lcd.lit .ov-box{background:var(--lcd-lit)}
+.ov-box h2{font-family:var(--f-pixel); font-size:4.4cqw; margin:0 0 1.6cqw; font-weight:400}
+.ov-box p{margin:0; font-size:7cqw; line-height:1; white-space:pre-line}
+
+/* ---------- keypad ---------- */
+.controls{display:grid; grid-template-columns:1fr 1.15fr 1fr; gap:12px; align-items:center}
+.numpad{display:grid; grid-template-columns:repeat(3,1fr); gap:9px 14px; padding:0 4px}
+.key{
+  appearance:none; border:0; cursor:pointer; color:var(--key-ink);
+  background:linear-gradient(180deg, var(--key-hi), var(--key));
+  border-radius:16px 16px 20px 20px; height:42px;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;
+  font:600 17px/1 var(--f-ui);
+  box-shadow:0 3px 0 var(--shell-lo), inset 0 1px 0 rgba(255,255,255,.14);
+  touch-action:manipulation; user-select:none; -webkit-user-select:none; -webkit-tap-highlight-color:transparent;
+  transition:transform .05s, box-shadow .05s, background .2s;
+}
+.key small{font:600 8.5px/1 var(--f-ui); letter-spacing:.14em; color:var(--key-sub); text-transform:uppercase}
+.key.down{transform:translateY(2px); box-shadow:0 1px 0 var(--shell-lo), inset 0 1px 0 rgba(255,255,255,.08)}
+.phone.lit .numpad .key{box-shadow:0 3px 0 var(--shell-lo), inset 0 1px 0 rgba(255,255,255,.14), 0 0 10px rgba(159,212,160,.18)}
+.phone.lit .numpad .key small{color:var(--accent)}
+.key.soft-key{height:38px; border-radius:20px; font-size:11px; letter-spacing:.12em; text-transform:uppercase}
+.key.c-key{height:38px; border-radius:20px}
+.rocker{display:flex; flex-direction:column; gap:3px}
+.rocker .key{height:30px; font-size:12px}
+.rocker .key:first-child{border-radius:22px 22px 6px 6px}
+.rocker .key:last-child{border-radius:6px 6px 22px 22px}
+
+.hint{max-width:340px; margin:0; text-align:center; font-size:13px; line-height:1.6; color:var(--desk-ink)}
+.hint kbd{font:600 11px/1 var(--f-ui); color:var(--desk-ink-hi); background:var(--shell); border-radius:4px; padding:2px 5px; box-shadow:0 1px 0 var(--shell-lo)}
+
+@media (prefers-reduced-motion: reduce){ .lcd, .key{transition:none} }
