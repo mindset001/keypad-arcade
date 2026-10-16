@@ -47,6 +47,13 @@ export default function Arcade() {
               </div>
             </section>
 
+            <section className="screen" data-screen="help" hidden>
+              <div className="scores-wrap">
+                <div className="sc-tab" id="hlpTab"></div>
+                <ul className="hlp" id="hlpText"></ul>
+              </div>
+            </section>
+
             <section className="screen" data-screen="game" hidden>
               <canvas id="cv" width={128} height={88} aria-label="Game screen"></canvas>
               <div className="ov" id="ov" hidden><div className="ov-box"><h2 id="ovTitle">Paused</h2><p id="ovText"></p></div></div>
