@@ -31,7 +31,13 @@ export default function Arcade() {
               <form className="login" id="loginForm" noValidate autoComplete="on">
                 <p className="msg" id="loginMsg" role="status">Log in, or make a new player.</p>
                 <input id="user" name="username" autoComplete="username" placeholder="Player name" aria-label="Player name" maxLength={12} spellCheck={false} autoCapitalize="off" />
-                <input id="pass" name="password" type="password" autoComplete="current-password" placeholder="Password" aria-label="Password" maxLength={72} />
+                <div className="pw">
+                  <input id="pass" name="password" type="password" autoComplete="current-password" placeholder="Password" aria-label="Password" maxLength={72} />
+                  <button type="button" id="btnShow" className="pwtoggle" aria-pressed="false" aria-label="Show password" title="Show password">
+                    <svg className="eye-open" viewBox="0 0 15 9" shapeRendering="crispEdges" aria-hidden="true"><path d="M5 0h5v1H5zM3 1h2v1H3zM10 1h2v1H10zM2 2h1v1H2zM12 2h1v1H12zM1 3h1v1H1zM6 3h3v1H6zM13 3h1v1H13zM0 4h1v1H0zM6 4h3v1H6zM14 4h1v1H14zM1 5h1v1H1zM6 5h3v1H6zM13 5h1v1H13zM2 6h1v1H2zM12 6h1v1H12zM3 7h2v1H3zM10 7h2v1H10zM5 8h5v1H5z" /></svg>
+                    <svg className="eye-shut" viewBox="0 0 15 9" shapeRendering="crispEdges" aria-hidden="true"><path d="M5 0h5v1H5zM13 0h2v1H13zM3 1h2v1H3zM11 1h2v1H11zM2 2h1v1H2zM9 2h2v1H9zM12 2h1v1H12zM1 3h1v1H1zM6 3h1v1H6zM8 3h2v1H8zM13 3h1v1H13zM0 4h1v1H0zM6 4h2v1H6zM14 4h1v1H14zM1 5h1v1H1zM4 5h2v1H4zM7 5h2v1H7zM13 5h1v1H13zM3 6h2v1H3zM12 6h1v1H12zM1 7h2v1H1zM4 7h1v1H4zM10 7h2v1H10zM0 8h1v1H0zM5 8h5v1H5z" /></svg>
+                  </button>
+                </div>
                 <div className="row">
                   <button type="submit" id="btnLogin">Log in</button>
                   <button type="button" id="btnNew">New player</button>

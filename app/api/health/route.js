@@ -26,7 +26,8 @@ export async function GET(){
   };
   if(!uri){ out.reason = 'MONGODB_URI is not set on this deployment. Add it in Vercel (Settings > Environment Variables) and redeploy.'; }
   else {
-    try{ const c = await connectDB(); await c.connection.db.admin().ping(); out.db = 'ok'; }
+    // out.database: accounts live in ONE database, so a mismatch between deployments explains "my account isn't there"
+    try{ const c = await connectDB(); await c.connection.db.admin().ping(); out.db = 'ok'; out.database = c.connection.name; }
     catch(e){ out.db = 'failed'; out.reason = explain(e); console.error('[health]', e?.name, e?.codeName || ''); }
   }
   if(out.env.AUTH_SECRET !== 'set') out.reason = [out.reason, 'AUTH_SECRET must be set (16+ characters) or nobody can log in.'].filter(Boolean).join(' ');

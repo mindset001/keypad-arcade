@@ -25,12 +25,20 @@ check(){ local label=$1 want=$2; shift 2
 
 echo "API smoke test against $BASE (players $NAME, $NAME2)"
 check "health: settings present, database reachable" '"healthy":true' $API/health
+check "health: says which database it uses"       '"database":"' $API/health
 check "register: bad name rejected"       '[400]' "${J[@]}" -d '{"name":"a!","password":"secret1"}' $API/auth/register
 check "register: short password rejected" '[400]' "${J[@]}" -d "{\"name\":\"$NAME\",\"password\":\"123\"}" $API/auth/register
 check "register: 'guest' is reserved"     '[400]' "${J[@]}" -d '{"name":"Guest","password":"secret1"}' $API/auth/register
 check "register: ok, keeps chosen colour" '"theme":"red"' "${J[@]}" -c "$JAR" -d "{\"name\":\"$NAME\",\"password\":\"secret1\",\"theme\":\"red\"}" $API/auth/register
+check "register: reserved name 'admin'"    '[400]' "${J[@]}" -d '{"name":"admin","password":"secret1"}' $API/auth/register
+check "register: password over 72 bytes"  '[400]' "${J[@]}" -d "{\"name\":\"${NAME}x\",\"password\":\"$(printf 'a%.0s' $(seq 1 73))\"}" $API/auth/register
 check "register: duplicate (any case)"    '[409]' "${J[@]}" -d "{\"name\":\"$(echo $NAME | tr a-z A-Z)\",\"password\":\"secret1\"}" $API/auth/register
 check "me: logged in, with colour"        '"theme":"red"' -b "$JAR" $API/auth/me
+# the cookie's Secure flag follows the connection: plain http on localhost, https behind Vercel's proxy
+PLAIN=$(curl -si "${J[@]}" -d "{\"name\":\"$NAME\",\"password\":\"secret1\"}" $API/auth/login | grep -i '^set-cookie')
+SECURE=$(curl -si "${J[@]}" -H 'x-forwarded-proto: https' -d "{\"name\":\"$NAME\",\"password\":\"secret1\"}" $API/auth/login | grep -i '^set-cookie')
+[[ "$PLAIN" != *[Ss]ecure* && "$PLAIN" == *[Hh]ttp[Oo]nly* ]] && { PASS=$((PASS+1)); echo "ok    cookie: httpOnly, not Secure over plain http"; } || { FAIL=$((FAIL+1)); echo "FAIL  cookie over http: $PLAIN"; }
+[[ "$SECURE" == *[Ss]ecure* && "$SECURE" == *[Hh]ttp[Oo]nly* ]] && { PASS=$((PASS+1)); echo "ok    cookie: Secure behind an https proxy"; } || { FAIL=$((FAIL+1)); echo "FAIL  cookie over https: $SECURE"; }
 check "me: no cookie -> null"             '{"user":null}' $API/auth/me
 check "login: wrong password"             '[401]' "${J[@]}" -d "{\"name\":\"$NAME\",\"password\":\"nope123\"}" $API/auth/login
 check "login: unknown player"             '[401]' "${J[@]}" -d '{"name":"nobodyhere","password":"nope123"}' $API/auth/login
@@ -61,5 +69,16 @@ check "league: players are separate"      '{"league":null}' -b "$JAR2" $API/leag
 check "non-JSON POST rejected"            '[415]' -X POST -d 'x=1' $API/auth/login
 check "logout"                            '{"ok":true}' -X POST -c "$JAR" -b "$JAR" $API/auth/logout
 check "me after logout"                   '{"user":null}' -b "$JAR" $API/auth/me
+
+# Opt-in: locks ONE throwaway player for 15 minutes, so it is off by default.  SMOKE_RATELIMIT=1 npm run smoke
+if [ "$SMOKE_RATELIMIT" = 1 ]; then
+  VICTIM="smoke$RANDOM"; curl -s "${J[@]}" -d "{\"name\":\"$VICTIM\",\"password\":\"secret1\"}" $API/auth/register >/dev/null
+  for i in 1 2 3 4 5 6 7 8; do curl -s -o /dev/null "${J[@]}" -d "{\"name\":\"$VICTIM\",\"password\":\"wrong$i\"}" $API/auth/login; done
+  check "lockout: 9th attempt is refused (429)"       '[429]' "${J[@]}" -d "{\"name\":\"$VICTIM\",\"password\":\"wrong9\"}" $API/auth/login
+  check "lockout: even the right password waits"       '[429]' "${J[@]}" -d "{\"name\":\"$VICTIM\",\"password\":\"secret1\"}" $API/auth/login
+  RA=$(curl -si "${J[@]}" -d "{\"name\":\"$VICTIM\",\"password\":\"secret1\"}" $API/auth/login | grep -i '^retry-after')
+  [[ "$RA" == *[0-9]* ]] && { PASS=$((PASS+1)); echo "ok    lockout: tells the client how long to wait ($RA)"; } || { FAIL=$((FAIL+1)); echo "FAIL  no Retry-After header"; }
+  check "lockout: other players are unaffected"        '[200]' "${J[@]}" -d "{\"name\":\"$NAME2\",\"password\":\"secret2\"}" $API/auth/login
+fi
 
 echo; echo "$PASS passed, $FAIL failed"; [ "$FAIL" = 0 ]

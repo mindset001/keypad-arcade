@@ -20,7 +20,9 @@ npm run dev                     # http://localhost:3000 (or the next free port)
 
 **Keep real values in `.env.local` only.** It is git-ignored. `.env.example` is committed, so it must only ever hold placeholders.
 
-Without these variables the site still builds and runs: the API answers `503 Server unavailable` and the game works in guest mode.
+| `RATE_LIMIT` | Optional. `off` disables login/sign-up limiting. For local testing only; leave it unset in production. |
+
+Without the two required variables the site still builds and runs: the API answers `503 Server unavailable` and the game works in guest mode. If the live site says "Server unavailable", open `/api/health`: it names the exact problem (missing variable, malformed string, wrong password, Atlas blocking the connection) without revealing any secret.
 
 ```bash
 npm run build && npm start      # production
@@ -54,7 +56,11 @@ tests/                     unit tests
 scripts/smoke-api.sh       API smoke test
 ```
 
-**Accounts.** Name + password. Passwords are bcrypt-hashed; the session is a signed, `httpOnly`, `SameSite=Lax` cookie valid for 30 days. Names are case-insensitive and unique.
+**Accounts.** Name + password. Passwords are bcrypt-hashed; the session is a signed, `httpOnly`, `SameSite=Lax` cookie valid for 30 days (marked `Secure` whenever the connection is https). Names are case-insensitive and unique; 2-12 letters, numbers or `_`; a few names (`guest`, `admin`, `root`, `system`, `demlinks`) are reserved. Passwords are 6+ characters and at most 72 **bytes**, because bcrypt ignores everything after that. The rules live in one file, `lib/arcade/validate.js`, used by both the game and the server. The password field has an eye button to show or hide what you type.
+
+**Limits.** After 8 failed logins for one player name, or 30 from one address, in 15 minutes, logins answer `429` (with `Retry-After`) until the window passes, even with the right password. Only failures count. At most 10 sign-ups per address per hour. Counters live in MongoDB (`ratelimits`, expired automatically), so they hold across serverless instances.
+
+**Saves are never silent.** A score that cannot reach the server (offline, server down, or your login expired) is kept on the device, the game-over screen says so ("Offline. Will retry" / "Log in again to save"), and it is sent automatically at the next login or successful save. A handset colour changed offline is pushed at the next login. If the session ends, the next trip to the menu sends you to log in.
 
 **Scores.** Logged-in players post to a shared leaderboard (top 10 per game, plus "mine"). Each player keeps their best 50 per game. Guests keep scores in their own browser only. Scores are reported by the browser and only range-checked, so the leaderboard is friendly, not tamper-proof.
 
@@ -75,7 +81,7 @@ scripts/smoke-api.sh       API smoke test
 
 `npm test` covers the parts that are pure logic: league fixtures and standings, all four games run headlessly (level data, physics, scoring rules, whole matches with a bot, difficulty ordering), and the share helper. Soccer's difficulty test plays seeded matches, so it is deterministic.
 
-`npm run smoke` covers the API (validation, sessions, scores, league, colours). It needs a running server and a database.
+`npm run smoke` covers the API (validation, sessions, cookies, scores, league, colours, health). It needs a running server and a database. `SMOKE_RATELIMIT=1 npm run smoke` also checks the lockout (it deliberately locks one throwaway player for 15 minutes).
 
 Not covered by automation: the visuals and touch feel. Check those by hand on a real phone: sign up, play each game, share a score, switch handset colour, and reload.
 

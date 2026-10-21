@@ -113,6 +113,13 @@ body{background-color:var(--desk); color:var(--desk-ink-hi); font-family:var(--f
 .login button{font:inherit; color:var(--ink); background:transparent; border:.6cqw solid var(--ink); padding:0 1cqw; line-height:1.15; cursor:pointer; border-radius:0}
 .login button:hover,.login button:focus-visible{background:var(--ink); color:var(--lcd); outline:none}
 .lcd.lit .login button:hover,.lcd.lit .login button:focus-visible{color:var(--lcd-lit)}
+.login .pw{display:grid; grid-template-columns:1fr auto; gap:1.6cqw}
+.login .pw .pwtoggle{display:grid; place-items:center; padding:0 2.6cqw}
+.login .pw .pwtoggle svg{display:block; width:8.5cqw; height:auto; fill:currentColor}   /* pixel eye, inherits the button's ink / inverted colours */
+.login .pw .pwtoggle .eye-shut,.login .pw .pwtoggle[aria-pressed=true] .eye-open{display:none}
+.login .pw .pwtoggle[aria-pressed=true] .eye-shut{display:block}
+.login button:disabled{opacity:.45; cursor:default}
+.login button:disabled:hover{background:transparent; color:var(--ink)}
 .login .link{border-color:transparent; text-decoration:underline; text-underline-offset:.6cqw}
 
 /* scores */

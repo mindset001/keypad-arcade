@@ -13,4 +13,6 @@ const ScoreSchema = new mongoose.Schema({
 ScoreSchema.index({ game:1, score:-1, createdAt:1 });   // leaderboard
 ScoreSchema.index({ user:1, game:1, score:-1 });        // a player's own list / best
 
+/* dev hot-reload: drop a cached model so a changed schema (e.g. a new field) is never silently ignored */
+if(process.env.NODE_ENV !== 'production') try{ mongoose.deleteModel('Score'); }catch{}
 export default mongoose.models.Score || mongoose.model('Score', ScoreSchema);

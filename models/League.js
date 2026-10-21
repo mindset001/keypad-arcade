@@ -7,4 +7,6 @@ const LeagueSchema = new mongoose.Schema({
   rows:  { type:[{ _id:false, p:Number, w:Number, d:Number, l:Number, gf:Number, ga:Number, pts:Number }], required:true }
 }, { timestamps:true });
 
+/* dev hot-reload: drop a cached model so a changed schema (e.g. a new field) is never silently ignored */
+if(process.env.NODE_ENV !== 'production') try{ mongoose.deleteModel('League'); }catch{}
 export default mongoose.models.League || mongoose.model('League', LeagueSchema);
