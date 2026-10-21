@@ -24,6 +24,7 @@ check(){ local label=$1 want=$2; shift 2
   if [[ "$out" == *"$want"* ]]; then PASS=$((PASS+1)); echo "ok    $label"; else FAIL=$((FAIL+1)); echo "FAIL  $label"; echo "      wanted: $want"; echo "      got:    $out"; fi; }
 
 echo "API smoke test against $BASE (players $NAME, $NAME2)"
+check "health: settings present, database reachable" '"healthy":true' $API/health
 check "register: bad name rejected"       '[400]' "${J[@]}" -d '{"name":"a!","password":"secret1"}' $API/auth/register
 check "register: short password rejected" '[400]' "${J[@]}" -d "{\"name\":\"$NAME\",\"password\":\"123\"}" $API/auth/register
 check "register: 'guest' is reserved"     '[400]' "${J[@]}" -d '{"name":"Guest","password":"secret1"}' $API/auth/register
