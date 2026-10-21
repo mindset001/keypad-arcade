@@ -30,7 +30,7 @@ export default function Arcade() {
               <form className="login" id="loginForm" noValidate autoComplete="on">
                 <p className="msg" id="loginMsg" role="status">Log in, or make a new player.</p>
                 <input id="user" name="username" autoComplete="username" placeholder="Player name" aria-label="Player name" maxLength={12} spellCheck={false} autoCapitalize="off" />
-                <input id="pass" name="password" type="password" autoComplete="current-password" placeholder="Password" aria-label="Password" maxLength={24} />
+                <input id="pass" name="password" type="password" autoComplete="current-password" placeholder="Password" aria-label="Password" maxLength={72} />
                 <div className="row">
                   <button type="submit" id="btnLogin">Log in</button>
                   <button type="button" id="btnNew">New player</button>
