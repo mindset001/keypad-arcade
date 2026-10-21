@@ -8,7 +8,7 @@ export const POST = route(async request => {
   const user = await User.findOne({ nameLower:name.trim().toLowerCase() }).select('+passHash');
   const ok = await checkPassword(password, user ? user.passHash : DUMMY_HASH);
   if(!user || !ok) throw new HttpError(401, 'Wrong name or password.');
-  const res = json({ name:user.name });
+  const res = json({ name:user.name, theme:user.theme });
   setSessionCookie(res, await signSession(user));
   return res;
 });

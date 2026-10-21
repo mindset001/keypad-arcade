@@ -73,7 +73,7 @@ export default function Arcade() {
 
             <div className="soft">
               <span id="skL" role="button" tabIndex={-1}></span>
-              <span id="skC"></span>
+              <span id="skC" role="button" tabIndex={-1}></span>
               <span id="skR" role="button" tabIndex={-1}></span>
             </div>
           </div>
@@ -102,12 +102,12 @@ export default function Arcade() {
           <button className="key" data-k="8" tabIndex={-1}>8<small>tuv ▼</small></button>
           <button className="key" data-k="9" tabIndex={-1}>9<small>wxyz</small></button>
           <button className="key" data-k="*" tabIndex={-1}>*<small>pause</small></button>
-          <button className="key" data-k="0" tabIndex={-1}>0<small>&nbsp;</small></button>
+          <button className="key" data-k="0" tabIndex={-1}>0<small>share</small></button>
           <button className="key" data-k="#" tabIndex={-1}>#<small>sound</small></button>
         </div>
       </div>
 
-      <p className="hint">Move with <kbd>←</kbd><kbd>↑</kbd><kbd>→</kbd><kbd>↓</kbd> or <kbd>2</kbd><kbd>4</kbd><kbd>6</kbd><kbd>8</kbd>. <kbd>Enter</kbd> or <kbd>5</kbd> selects, <kbd>Esc</kbd> goes back, <kbd>P</kbd> pauses, <kbd>M</kbd> mutes. On a phone, tap the keypad.</p>
+      <p className="hint">Move with <kbd>←</kbd><kbd>↑</kbd><kbd>→</kbd><kbd>↓</kbd> or <kbd>2</kbd><kbd>4</kbd><kbd>6</kbd><kbd>8</kbd>. <kbd>Enter</kbd> or <kbd>5</kbd> selects, <kbd>Esc</kbd> goes back, <kbd>P</kbd> pauses, <kbd>M</kbd> mutes, <kbd>H</kbd> shares your score after a game. On a phone, tap the keypad.</p>
 
       <footer className="credit">Made by Demlinks · © {new Date().getFullYear()} · <Link href="/">About</Link></footer>
     </>

@@ -5,7 +5,9 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "test": "node --no-warnings --test \"tests/**/*.test.mjs\"",
+    "smoke": "bash scripts/smoke-api.sh"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

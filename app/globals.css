@@ -42,6 +42,14 @@ body{background-color:var(--desk); color:var(--desk-ink-hi); font-family:var(--f
 .credit a:hover{color:var(--accent)}
 .credit{font-family:var(--f-pixel); font-size:8px; letter-spacing:.14em; color:var(--desk-ink); text-transform:uppercase; opacity:.7; margin-top:4px}
 
+/* ---------- handset colours (Handset item in the menu; saved to the account) ---------- */
+.desk[data-theme=blue]{--shell:#1f4a8a; --shell-hi:#4a86d6; --shell-lo:#0b1d3b; --key:#2b62ad; --key-hi:#5593e3; --key-sub:#b8d3f6; --desk-2:#0f2c5a}
+.desk[data-theme=red]{--shell:#8c202f; --shell-hi:#d64a5f; --shell-lo:#3a0b13; --key:#a82b3c; --key-hi:#e25b6e; --key-sub:#f6bcc4; --desk-2:#4a1120}
+.desk[data-theme=black]{--shell:#2b2d34; --shell-hi:#51545f; --shell-lo:#0c0d11; --key:#363842; --key-hi:#5a5e6b; --key-sub:#a3a7b5; --desk-2:#1a1b24}
+/* the coral C key would disappear on a red handset */
+.desk[data-theme=red] .key[data-k=c]{background:linear-gradient(180deg,#ffd592,#e0902f); color:#2b1600}
+.desk[data-theme=red] .key[data-k=c].down{background:linear-gradient(180deg,#f0c27d,#c97d22)}
+
 /* ---------- handset ---------- */
 .phone{
   width:min(340px,100%);
@@ -87,7 +95,7 @@ body{background-color:var(--desk); color:var(--desk-ink-hi); font-family:var(--f
 .screen{grid-row:2; grid-column:1; position:relative; overflow:hidden; min-height:0}
 
 /* lists (menu, options) */
-.list{list-style:none; margin:0; padding:1.5cqw 0; height:100%; overflow:hidden; position:relative; font-size:7.2cqw; line-height:1.12}
+.list{list-style:none; margin:0; padding:1.5cqw 0; height:100%; overflow:hidden; position:relative; font-size:7cqw; line-height:1.02}
 .list li{display:flex; justify-content:space-between; gap:2cqw; padding:0 3cqw; cursor:pointer; white-space:nowrap}
 .list li.sel{background:var(--ink); color:var(--lcd)}
 .lcd.lit .list li.sel{color:var(--lcd-lit)}

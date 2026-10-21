@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 
-export const GAME_IDS = ['snake', 'roll', 'bounce', 'soccer'];
+import { GAME_IDS } from '../lib/arcade/data.js'; // one shared list of games
+export { GAME_IDS };
 
 const ScoreSchema = new mongoose.Schema({
   user:  { type:mongoose.Schema.Types.ObjectId, ref:'User', required:true },
