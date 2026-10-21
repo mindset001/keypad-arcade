@@ -108,6 +108,11 @@ html{scroll-behavior:smooth}
 @keyframes lp-bob{0%,100%{translate:0 0}50%{translate:0 -12px}}
 .lp-shadow{position:absolute; left:50%; bottom:-6px; width:250px; height:44px; translate:-50% 0; background:radial-gradient(ellipse, rgba(0,0,0,.6), transparent 70%); filter:blur(8px)}
 
+.lp-choose{margin-top:20px; font-size:14px; color:var(--desk-ink)}
+.lp-choose a{color:var(--accent); text-underline-offset:3px; font-weight:600}
+.lp-choose a:hover{color:#fff}
+.lp-center{justify-content:center; margin-top:28px}
+
 /* ---------- sections ---------- */
 .lp-sec{scroll-margin-top:64px; max-width:1160px; margin:0 auto; padding:88px max(20px, env(safe-area-inset-left))}
 .lp-head{max-width:640px; margin-bottom:44px}

@@ -1,0 +1,353 @@
+/* ============================================================================
+   TOUCH MODE: an Android-style app shell.
+   Everything is scoped to :root[data-controls=touch], so keypad mode is untouched.
+   .phone[data-view="ui"]   home / options / scores / help / league / login  (real touch UI)
+   .phone[data-view="game"] the pixel LCD in a glowing frame + a control sheet underneath
+   Colours follow the chosen handset colour through the --shell / --shell-hi variables.
+   ========================================================================== */
+.ts-bar,.ts-main,.ts-host,.td{display:none}
+/* sizes include padding everywhere in the touch UI (the page default is content-box for these) */
+.ts-bar,.ts-main,.ts-host,.td,.ts-bar *,.ts-main *,.ts-host *,.td *{box-sizing:border-box}
+
+:root[data-controls=touch] body{overscroll-behavior:none}
+:root[data-controls=touch] .desk{display:block; padding:0; min-height:100dvh; overflow:hidden; background:#06070d}
+:root[data-controls=touch] :is(.masthead,.hint,.credit,.earpiece,.controls,.numpad){display:none}
+
+:root[data-controls=touch] .phone{
+  --ts-text:#eef0ff; --ts-dim:#a8afd6; --ts-line:rgba(190,200,255,.15);
+  --ts-surface:color-mix(in oklab, var(--shell) 32%, #0b0e1e);
+  --ts-surface-hi:color-mix(in oklab, var(--shell-hi) 34%, #131733);
+  --ts-glass:linear-gradient(180deg, rgba(255,255,255,.14), rgba(255,255,255,.06));
+  --ts-accent:#7cf2c1; --ts-on-accent:#04241a; --ts-warm:#ffb86b; --ts-danger:#ff8fa0;
+  --bar-h:56px; --td:clamp(54px, 15vw, 70px);
+  position:relative; width:100%; max-width:none; height:100dvh; min-height:100dvh; margin:0; border-radius:0; box-shadow:none; overflow:hidden;
+  padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  color:var(--ts-text); font-family:var(--f-ui);
+  background:
+    radial-gradient(95% 55% at 12% -8%, color-mix(in oklab, var(--shell-hi) 62%, transparent), transparent 72%),
+    radial-gradient(75% 50% at 108% 108%, color-mix(in oklab, var(--accent) 15%, transparent), transparent 72%),
+    linear-gradient(180deg, #0d1129, #06070d 82%);
+  display:grid; grid-template-columns:1fr 1fr; grid-template-rows:auto minmax(0,1fr); grid-template-areas:"bar bar" "main main";
+  gap:0;
+}
+:root[data-controls=touch] .phone.lit{box-shadow:none}
+
+/* ---------- app bar ---------- */
+:root[data-controls=touch] .ts-bar{grid-area:bar; display:flex; align-items:center; gap:4px; min-height:var(--bar-h); padding:6px 8px 6px 10px; position:relative; z-index:3}
+.ts-title{flex:1; min-width:0; display:flex; align-items:center; gap:10px; font:700 18px/1.2 var(--f-ui); letter-spacing:.01em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.ts-logo{flex:none; width:32px; height:32px; border-radius:10px; background:var(--lcd-lit); color:var(--ink); display:grid; place-items:center; box-shadow:inset 0 0 8px rgba(34,48,27,.45), 0 4px 14px -4px var(--glow)}
+.ts-logo svg{width:24px; height:auto}
+.ts-actions{display:flex; align-items:center; gap:2px}
+.ts-ib{
+  flex:none; width:44px; height:44px; border:0; border-radius:50%; background:transparent; color:var(--ts-text); cursor:pointer; padding:0;
+  display:grid; place-items:center; touch-action:manipulation; -webkit-tap-highlight-color:transparent; -webkit-user-select:none; user-select:none;
+}
+.ts-ib svg{width:24px; height:24px}
+.ts-ib:hover{background:rgba(255,255,255,.07)}
+.ts-ib:focus-visible,.ts-btn:focus-visible,.ts-card:focus-visible,.ts-chip:focus-visible,.ts-seg-opt:focus-visible,.ts-swatch:focus-visible,.ts-step-btn:focus-visible,.ts-switch:focus-visible,.td-btn:focus-visible{outline:3px solid #fff; outline-offset:2px}
+
+/* any .ts-press thing gets a soft ripple from where the finger landed (the JS sets --rx/--ry and toggles .rip) */
+.ts-press{position:relative; overflow:hidden; -webkit-tap-highlight-color:transparent}
+.ts-press::after{content:""; position:absolute; left:var(--rx, 50%); top:var(--ry, 50%); width:24px; height:24px; margin:-12px 0 0 -12px; border-radius:50%; background:currentColor; opacity:0; transform:scale(0); pointer-events:none}
+.ts-press.rip::after{animation:ts-ripple .6s ease-out}
+@keyframes ts-ripple{from{opacity:.2; transform:scale(1)} to{opacity:0; transform:scale(22)}}
+
+/* ---------- views: which part of the phone is showing ---------- */
+:root[data-controls=touch] .phone[data-view=ui] .ts-main{display:block}
+:root[data-controls=touch] .phone[data-view=ui] :is(.bezel,.td){display:none!important}
+:root[data-controls=touch] .phone[data-view=game] .ts-main{display:none}
+:root[data-controls=touch] .ts-main{grid-area:main; overflow-y:auto; overflow-x:hidden; padding:2px 16px 28px; scrollbar-width:none; -webkit-overflow-scrolling:touch}
+:root[data-controls=touch] .ts-main::-webkit-scrollbar{display:none}
+.ts-view{max-width:760px; margin:0 auto; display:flex; flex-direction:column; gap:16px; animation:ts-in .24s ease-out both}
+@keyframes ts-in{from{opacity:0; transform:translateY(10px)} to{opacity:1; transform:none}}
+:root[data-controls=touch] .ts-host{display:block; position:absolute; inset:0; z-index:20; pointer-events:none}
+.ts-host > *{pointer-events:auto}
+
+/* ---------- shared pieces ---------- */
+.ts-btn{
+  appearance:none; border:0; cursor:pointer; min-height:52px; padding:0 24px; border-radius:26px; display:inline-flex; align-items:center; justify-content:center; gap:10px;
+  font:700 16px/1 var(--f-ui); letter-spacing:.01em; color:var(--ts-text); touch-action:manipulation; transition:transform .1s, filter .15s;
+}
+.ts-btn svg{width:22px; height:22px; flex:none}
+.ts-btn:active{transform:scale(.97)}
+.ts-btn:disabled{opacity:.45; cursor:default}
+.ts-btn-primary{background:linear-gradient(180deg,#63e6b5,#2a9d77); color:var(--ts-on-accent); box-shadow:0 10px 24px -8px rgba(42,157,119,.7), inset 0 1px 0 rgba(255,255,255,.4)}
+.ts-btn-tonal{background:rgba(255,255,255,.09); box-shadow:inset 0 0 0 1px var(--ts-line)}
+.ts-btn-text{background:transparent; color:var(--ts-accent)}
+.ts-btn-lg{min-height:58px; width:100%; font-size:17px}
+.ts-h{margin:6px 2px 0; font:700 13px/1 var(--f-ui); letter-spacing:.12em; text-transform:uppercase; color:var(--ts-dim)}
+.ts-quick{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+.ts-quick .ts-btn{padding:0 10px; white-space:nowrap; font-size:15px}
+.ts-foot{margin:4px 0 0; text-align:center; font:600 11px var(--f-ui); letter-spacing:.16em; text-transform:uppercase; color:var(--ts-dim); opacity:.7}
+.ts-chips{display:flex; gap:8px; overflow-x:auto; padding:2px 0 4px; scrollbar-width:none}
+.ts-chips::-webkit-scrollbar{display:none}
+.ts-chip{
+  flex:none; min-height:44px; padding:0 18px; border:0; border-radius:22px; cursor:pointer; display:inline-flex; align-items:center; gap:8px;
+  font:600 14px var(--f-ui); color:var(--ts-text); background:rgba(255,255,255,.08); box-shadow:inset 0 0 0 1px var(--ts-line); touch-action:manipulation;
+}
+.ts-chip svg{width:18px; height:18px}
+.ts-chip[aria-pressed=true]{background:color-mix(in oklab, var(--ts-accent) 26%, transparent); box-shadow:inset 0 0 0 1.5px var(--ts-accent); color:#fff}
+.ts-seg{display:inline-flex; padding:4px; gap:4px; border-radius:24px; background:rgba(255,255,255,.07); box-shadow:inset 0 0 0 1px var(--ts-line)}
+.ts-seg-opt{flex:1; min-height:44px; padding:0 18px; border:0; border-radius:20px; display:inline-flex; align-items:center; justify-content:center; gap:8px; cursor:pointer; font:600 14px var(--f-ui); color:var(--ts-dim); background:transparent; touch-action:manipulation; white-space:nowrap}
+.ts-seg-opt svg{width:18px; height:18px}
+.ts-seg-opt[aria-pressed=true]{background:linear-gradient(180deg,#63e6b5,#2a9d77); color:var(--ts-on-accent)}
+.ts-row{display:flex; align-items:center; justify-content:space-between; gap:14px; padding:14px 16px; border-radius:20px; background:rgba(255,255,255,.05); box-shadow:inset 0 0 0 1px var(--ts-line)}
+.ts-row-stack{flex-direction:column; align-items:stretch; gap:12px}
+.ts-row-label{font:600 15px var(--f-ui)}
+.ts-rows{display:flex; flex-direction:column; gap:10px}
+.ts-step{display:inline-flex; align-items:center; gap:6px; padding:4px; border-radius:26px; background:rgba(255,255,255,.07); box-shadow:inset 0 0 0 1px var(--ts-line)}
+.ts-step-btn{width:44px; height:44px; border:0; border-radius:50%; display:grid; place-items:center; cursor:pointer; color:var(--ts-text); background:rgba(255,255,255,.1); touch-action:manipulation}
+.ts-step-btn svg{width:20px; height:20px}
+.ts-step-val{min-width:44px; text-align:center; font:400 20px var(--f-pixel); color:var(--ts-accent)}
+
+/* the little LCD tile that holds each game's pixel art */
+.ts-art{display:grid; place-items:center; border-radius:16px; color:var(--ink); background-color:var(--lcd-lit);
+  background-image:linear-gradient(rgba(34,48,27,.08) 1px, transparent 1px), linear-gradient(90deg, rgba(34,48,27,.08) 1px, transparent 1px); background-size:6px 6px;
+  box-shadow:inset 0 0 18px rgba(34,48,27,.4)}
+.ts-art svg{width:66%; height:auto; max-height:80%}
+.ts-art-sm{width:72px; height:56px; flex:none; border-radius:14px}
+
+/* ---------- HOME ---------- */
+.ts-hello{display:flex; align-items:center; gap:14px; padding:6px 2px 2px}
+.ts-avatar{flex:none; width:48px; height:48px; border-radius:50%; display:grid; place-items:center; font:400 18px var(--f-pixel); color:var(--ts-on-accent); background:linear-gradient(135deg,#63e6b5,#8fb4ff); box-shadow:0 8px 20px -6px rgba(99,230,181,.55)}
+.ts-hello-text{flex:1; min-width:0}
+.ts-hi{margin:0; font:700 20px/1.2 var(--f-ui); overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.ts-sub{margin:3px 0 0; font:400 13px/1.3 var(--f-ui); color:var(--ts-dim)}
+.ts-grid{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+.ts-card{
+  appearance:none; border:0; cursor:pointer; text-align:left; color:inherit; font:inherit; padding:12px; border-radius:26px; display:flex; flex-direction:column; gap:12px; min-width:0;
+  background:linear-gradient(160deg, color-mix(in oklab, var(--shell-hi) 36%, #161a38), #0d1023);
+  box-shadow:inset 0 0 0 1px var(--ts-line), 0 18px 34px -16px rgba(0,0,0,.8); touch-action:manipulation; transition:transform .12s;
+}
+.ts-card:active{transform:scale(.97)}
+.ts-card .ts-art{aspect-ratio:16/11}
+.ts-card-body{display:flex; flex-direction:column; gap:3px; padding:0 4px}
+.ts-card-body b{font:700 16px/1.2 var(--f-ui)}
+.ts-card-body small{font:400 12px/1.35 var(--f-ui); color:var(--ts-dim)}
+.ts-best{align-self:flex-start; margin:0 4px 2px; padding:4px 10px; border-radius:12px; font:600 11px var(--f-ui); letter-spacing:.04em; color:var(--ts-dim); background:rgba(255,255,255,.07)}
+.ts-best.has{color:var(--ts-on-accent); background:linear-gradient(180deg,#63e6b5,#3fbf93)}
+
+/* ---------- sheets & dialogs ---------- */
+.ts-scrim{position:absolute; inset:0; background:rgba(3,4,10,.62); backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px); animation:ts-fade .2s ease-out both}
+.ts-scrim-dim{background:rgba(3,4,10,.5)}
+.ts-scrim.out,.ts-sheet.out{animation:ts-out .19s ease-in both}
+@keyframes ts-fade{from{opacity:0} to{opacity:1}}
+@keyframes ts-out{to{opacity:0}}
+.ts-sheet{
+  position:absolute; left:0; right:0; bottom:0; max-width:620px; margin:0 auto; max-height:92%; overflow-y:auto; outline:0;
+  padding:10px 20px calc(24px + env(safe-area-inset-bottom)); border-radius:30px 30px 0 0;
+  background:linear-gradient(180deg, color-mix(in oklab, var(--shell-hi) 26%, #1a1e3d), #0e1124);
+  box-shadow:0 -24px 70px rgba(0,0,0,.65), inset 0 1px 0 rgba(255,255,255,.12);
+  display:flex; flex-direction:column; gap:14px; animation:ts-up .3s cubic-bezier(.2,.85,.25,1) both;
+}
+@keyframes ts-up{from{transform:translateY(60%); opacity:0} to{transform:none; opacity:1}}
+.ts-grab{align-self:center; width:40px; height:5px; border-radius:3px; background:rgba(255,255,255,.28)}
+.ts-sheet-head{display:flex; align-items:center; gap:14px}
+.ts-sheet-titles{flex:1; min-width:0}
+.ts-sheet-titles h2{margin:0; font:700 20px/1.2 var(--f-ui)}
+.ts-sheet-titles p{margin:4px 0 0; font:400 13px/1.3 var(--f-ui); color:var(--ts-dim)}
+.ts-dialog{
+  position:absolute; left:50%; top:50%; width:min(400px, calc(100% - 40px)); transform:translate(-50%,-50%); padding:26px 22px 20px; border-radius:30px; text-align:center;
+  background:linear-gradient(180deg, color-mix(in oklab, var(--shell-hi) 28%, #1b2040), #0e1124);
+  box-shadow:0 30px 80px rgba(0,0,0,.7), inset 0 0 0 1px var(--ts-line), inset 0 1px 0 rgba(255,255,255,.12); animation:ts-pop .28s cubic-bezier(.2,.9,.25,1.1) both;
+}
+@keyframes ts-pop{from{opacity:0; transform:translate(-50%,-46%) scale(.92)} to{opacity:1; transform:translate(-50%,-50%) scale(1)}}
+.ts-dlg-title{margin:0; font:400 20px/1.4 var(--f-pixel)}
+.ts-dlg-sub{margin:8px 0 0; color:var(--ts-dim); font:500 15px var(--f-ui)}
+.ts-dlg-lines{margin:14px 0 4px; display:flex; flex-direction:column; gap:6px}
+.ts-dlg-lines p{margin:0; font:500 15px/1.4 var(--f-ui); color:var(--ts-dim)}
+.ts-dlg-lines p:first-child{font:400 22px/1.3 var(--f-pixel); color:var(--ts-accent)}
+.ts-dlg-actions{display:flex; flex-direction:column; gap:10px; margin-top:20px}
+.ts-toast{position:absolute; left:50%; bottom:calc(28px + env(safe-area-inset-bottom)); transform:translateX(-50%); padding:13px 20px; border-radius:16px; font:600 14px var(--f-ui); color:#14172e; background:#eef0ff; box-shadow:0 14px 34px rgba(0,0,0,.5); animation:ts-up .25s ease-out both; z-index:30}
+.ts-swatches{display:grid; grid-template-columns:repeat(4,1fr); gap:10px}
+.ts-swatch{border:0; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:8px; padding:12px 4px; border-radius:20px; color:var(--ts-dim); background:rgba(255,255,255,.05); box-shadow:inset 0 0 0 1px var(--ts-line); font:600 12px var(--f-ui); touch-action:manipulation}
+.ts-swatch::before{content:""; width:34px; height:34px; border-radius:50%; background:radial-gradient(circle at 35% 30%, color-mix(in oklab, var(--c) 60%, #fff), var(--c)); box-shadow:0 6px 14px -4px var(--c)}
+.ts-swatch svg{position:absolute; top:12px; width:22px; height:22px; color:#fff; opacity:0; transform:scale(.6); transition:all .15s}
+.ts-swatch[aria-pressed=true]{color:var(--ts-text); box-shadow:inset 0 0 0 2px var(--ts-accent)}
+.ts-swatch[aria-pressed=true] svg{opacity:1; transform:none}
+.ts-switch{position:relative; width:56px; height:32px; border:0; border-radius:16px; cursor:pointer; background:rgba(255,255,255,.16); transition:background .2s; flex:none; touch-action:manipulation}
+.ts-switch i{position:absolute; top:4px; left:4px; width:24px; height:24px; border-radius:50%; background:#fff; box-shadow:0 2px 6px rgba(0,0,0,.4); transition:transform .2s}
+.ts-switch[aria-checked=true]{background:linear-gradient(180deg,#63e6b5,#2a9d77)}
+.ts-switch[aria-checked=true] i{transform:translateX(24px)}
+
+/* ---------- SCORES ---------- */
+.ts-scores-body{display:flex; flex-direction:column; gap:12px}
+.ts-skel{height:54px; border-radius:18px; background:linear-gradient(90deg, rgba(255,255,255,.05), rgba(255,255,255,.12), rgba(255,255,255,.05)); background-size:200% 100%; animation:ts-shimmer 1.2s linear infinite}
+@keyframes ts-shimmer{to{background-position:-200% 0}}
+.ts-bestcard{display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-radius:22px; background:linear-gradient(135deg, color-mix(in oklab, var(--ts-accent) 22%, #14183a), #0f1228); box-shadow:inset 0 0 0 1px color-mix(in oklab, var(--ts-accent) 45%, transparent)}
+.ts-bestcard span{font:600 14px var(--f-ui); color:var(--ts-dim)}
+.ts-bestcard b{font:400 26px var(--f-pixel); color:var(--ts-accent)}
+.ts-rank{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px}
+.ts-rank li{display:flex; align-items:center; gap:14px; padding:12px 16px; border-radius:18px; background:rgba(255,255,255,.05); box-shadow:inset 0 0 0 1px var(--ts-line)}
+.ts-pos{flex:none; width:30px; height:30px; border-radius:50%; display:grid; place-items:center; font:700 13px var(--f-ui); color:var(--ts-dim); background:rgba(255,255,255,.08)}
+.ts-rank .top1 .ts-pos{background:linear-gradient(180deg,#ffe08a,#e0a82e); color:#3a2600}
+.ts-rank .top2 .ts-pos{background:linear-gradient(180deg,#e6ebf5,#a9b3c8); color:#1d2433}
+.ts-rank .top3 .ts-pos{background:linear-gradient(180deg,#f0b48a,#b9703a); color:#2e1600}
+.ts-name{flex:1; min-width:0; font:600 16px var(--f-ui); overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.ts-pts{font:400 16px var(--f-pixel); color:var(--ts-accent)}
+.ts-empty,.ts-note{margin:8px 4px; text-align:center; color:var(--ts-dim); font:500 14px/1.5 var(--f-ui)}
+
+/* ---------- HELP ---------- */
+.ts-help{padding:18px; border-radius:26px; background:linear-gradient(160deg, color-mix(in oklab, var(--shell-hi) 30%, #161a38), #0d1023); box-shadow:inset 0 0 0 1px var(--ts-line); display:flex; flex-direction:column; gap:14px}
+.ts-help .ts-art{height:120px}
+.ts-help h2{margin:0; font:700 20px var(--f-ui)}
+.ts-help ul{margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:12px}
+.ts-help li{position:relative; padding-left:22px; font:400 15px/1.55 var(--f-ui); color:var(--ts-text)}
+.ts-help li::before{content:""; position:absolute; left:2px; top:.6em; width:9px; height:9px; border-radius:3px; background:var(--ts-accent); box-shadow:0 0 12px color-mix(in oklab, var(--ts-accent) 70%, transparent)}
+
+/* ---------- LEAGUE ---------- */
+.ts-fixture{display:flex; flex-direction:column; gap:10px; padding:20px; border-radius:28px; text-align:center; background:linear-gradient(160deg, color-mix(in oklab, var(--ts-accent) 16%, #151a3a), #0e1126); box-shadow:inset 0 0 0 1px var(--ts-line)}
+.ts-fx-round{margin:0; font:600 12px var(--f-ui); letter-spacing:.14em; text-transform:uppercase; color:var(--ts-dim)}
+.ts-fx-teams{margin:0 0 6px; font:400 17px/1.5 var(--f-pixel)}
+.ts-table{display:flex; flex-direction:column; gap:6px}
+.ts-tr{display:grid; grid-template-columns:34px 1fr 34px 46px 44px; align-items:center; gap:6px; padding:11px 14px; border-radius:16px; background:rgba(255,255,255,.05); font:500 14px var(--f-ui); text-align:center}
+.ts-tr .ts-club{text-align:left; font-weight:600}
+.ts-tr b{font:400 14px var(--f-pixel); color:var(--ts-accent)}
+.ts-tr.me{background:color-mix(in oklab, var(--ts-accent) 20%, transparent); box-shadow:inset 0 0 0 1.5px var(--ts-accent)}
+.ts-th{background:transparent; padding-block:4px; font:600 11px var(--f-ui); letter-spacing:.1em; text-transform:uppercase; color:var(--ts-dim)}
+
+/* ---------- LOGIN ---------- */
+.ts-login{align-items:stretch; gap:18px; padding-top:6px}
+.ts-login-hero{text-align:center; display:flex; flex-direction:column; align-items:center; gap:8px; padding:6px 0 2px}
+.ts-logo-big{width:78px; height:78px; border-radius:24px; display:grid; place-items:center; color:var(--ink); background:var(--lcd-lit); box-shadow:inset 0 0 14px rgba(34,48,27,.45), 0 12px 30px -8px var(--glow)}
+.ts-logo-big svg{width:58px; height:auto}
+.ts-login-hero h1{margin:6px 0 0; font:400 17px/1.4 var(--f-pixel); letter-spacing:.06em; background:linear-gradient(90deg,var(--ts-accent),#8fb4ff 55%,var(--ts-danger)); -webkit-background-clip:text; background-clip:text; color:transparent}
+.ts-login-hero p{margin:0; font:400 14px/1.5 var(--f-ui); color:var(--ts-dim)}
+.ts-card-form{display:flex; flex-direction:column; gap:14px; padding:20px; border-radius:28px; background:linear-gradient(160deg, color-mix(in oklab, var(--shell-hi) 28%, #151936), #0d1023); box-shadow:inset 0 0 0 1px var(--ts-line), 0 24px 50px -20px rgba(0,0,0,.8)}
+.ts-card-form.busy{opacity:.7; pointer-events:none}
+.ts-card-form.shake{animation:ts-shake .4s}
+@keyframes ts-shake{20%{transform:translateX(-8px)} 40%{transform:translateX(7px)} 60%{transform:translateX(-5px)} 80%{transform:translateX(3px)}}
+.ts-field{position:relative; display:block}
+.ts-input{width:100%; height:58px; padding:22px 52px 6px 16px; border:0; border-radius:18px; font:500 17px var(--f-ui); color:var(--ts-text); background:rgba(255,255,255,.07); box-shadow:inset 0 0 0 1px var(--ts-line); outline:0}
+.ts-input:focus{box-shadow:inset 0 0 0 2px var(--ts-accent); background:rgba(255,255,255,.09)}
+.ts-field-label{position:absolute; left:16px; top:19px; font:500 16px var(--f-ui); color:var(--ts-dim); pointer-events:none; transition:all .15s}
+.ts-input:focus + .ts-field-label,.ts-input:not(:placeholder-shown) + .ts-field-label{top:8px; font-size:11px; letter-spacing:.06em; color:var(--ts-accent)}
+.ts-eye{position:absolute; right:6px; top:7px}
+.ts-error{margin:0; min-height:20px; font:500 14px/1.4 var(--f-ui); color:var(--ts-dim); text-align:center}
+.ts-error.bad{color:var(--ts-danger)}
+.ts-form-actions{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+.ts-form-actions .ts-btn{padding:0 12px}
+
+/* ---------- THE GAME SCREEN: pixel LCD in a glowing frame + a control sheet ---------- */
+:root[data-controls=touch] .phone[data-view=game]{grid-template-rows:auto auto minmax(0,1fr); grid-template-areas:"bar bar" "lcd lcd" "left right"}
+:root[data-controls=touch] .phone[data-view=game]::before{content:""; grid-area:3 / 1 / 4 / 3; margin-top:14px; border-radius:32px 32px 0 0; background:linear-gradient(180deg, rgba(255,255,255,.09), rgba(255,255,255,.03)); box-shadow:inset 0 1px 0 rgba(255,255,255,.16), 0 -10px 40px rgba(0,0,0,.35)}
+:root[data-controls=touch] .bezel{
+  grid-area:lcd; justify-self:center; align-self:start; padding:0; background:#000; border-radius:24px; overflow:hidden; margin:6px 14px 0;
+  width:min(calc(100% - 28px), calc((100dvh - var(--bar-h) - 250px) * 1.28)); box-shadow:0 0 0 7px #0a0c18, 0 0 0 8px var(--ts-line), 0 24px 50px -10px rgba(0,0,0,.7), 0 0 60px -8px var(--glow);
+}
+:root[data-controls=touch] .lcd{box-shadow:none; aspect-ratio:128/100; grid-template-rows:9.375cqw 1fr} /* no pixel soft-key bar: real buttons replace it */
+:root[data-controls=touch] .soft{display:none}
+:root[data-controls=touch] .phone[data-view=game] .td{display:flex; align-items:center; justify-content:center; min-height:0; padding:22px 14px calc(18px + env(safe-area-inset-bottom)); position:relative}
+.td-left{grid-area:left} .td-right{grid-area:right}
+.td .g{display:none}
+:root[data-controls=touch] .screen[data-screen=game]{touch-action:none}
+
+/* which controls belong to which game */
+.phone[data-scheme=snake] :is(.g-dpad,.g-hint),
+.phone[data-scheme=roll] :is(.g-roll-l,.g-roll-r),
+.phone[data-scheme=bounce] :is(.g-lr,.g-bounce),
+.phone[data-scheme=soccer] :is(.g-stick,.g-soccer){display:var(--d, flex)}
+
+.td-btn{
+  --pressed:color-mix(in oklab, var(--ts-accent) 34%, transparent);
+  appearance:none; border:0; cursor:pointer; color:var(--ts-text); font:700 20px/1 var(--f-ui); background:var(--ts-glass); border-radius:24px; min-width:48px; min-height:48px;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.16), inset 0 1px 0 rgba(255,255,255,.2), 0 12px 24px -10px rgba(0,0,0,.7);
+  touch-action:none; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; -webkit-tap-highlight-color:transparent; transition:transform .06s, background .1s, box-shadow .1s;
+}
+.td-btn svg{width:30px; height:30px; pointer-events:none}
+.td-btn small{font:600 10px/1 var(--f-ui); letter-spacing:.14em; text-transform:uppercase; opacity:.75}
+.td-btn.down{transform:scale(.93); background:linear-gradient(180deg, var(--pressed), color-mix(in oklab, var(--ts-accent) 16%, transparent)); box-shadow:inset 0 0 0 2px var(--ts-accent), 0 0 28px -4px var(--ts-accent)}
+
+.g-dpad{--d:grid; position:relative; width:calc(var(--td) * 3 + 16px); height:calc(var(--td) * 3 + 16px); grid-template-columns:repeat(3, 1fr); grid-template-rows:repeat(3, 1fr); gap:4px; padding:6px; border-radius:50%;
+  background:radial-gradient(circle, rgba(255,255,255,.04), rgba(255,255,255,.1)); box-shadow:inset 0 0 0 1px var(--ts-line), inset 0 10px 26px rgba(0,0,0,.4)}
+.g-dpad .td-btn{min-width:0; min-height:0; border-radius:50%}
+.tdb-up{grid-area:1/2} .tdb-left{grid-area:2/1} .tdb-right{grid-area:2/3} .tdb-down{grid-area:3/2}
+.td-hub{grid-area:2/2; margin:30%; border-radius:50%; background:radial-gradient(circle at 40% 35%, rgba(255,255,255,.2), rgba(255,255,255,.04))}
+
+.g-lr{--d:flex; gap:12px}
+.g-lr .td-btn{width:calc(var(--td) * 1.3); height:calc(var(--td) * 1.9); border-radius:28px}
+.g-roll-l,.g-roll-r{--d:flex; width:100%; justify-content:center}
+.td-big{width:min(100%, calc(var(--td) * 2.6)); height:calc(var(--td) * 2.3); border-radius:34px}
+.td-big svg{width:44px; height:44px}
+.g-bounce{--d:flex; flex-direction:column; gap:12px; align-items:center}
+.td-jump{width:calc(var(--td) * 2.4); height:calc(var(--td) * 1.45); border-radius:26px; flex-direction:row; gap:10px; font-size:15px; letter-spacing:.04em}
+.td-jump span{display:flex; flex-direction:column; align-items:flex-start; gap:3px}
+.td-jump b{font:700 16px/1 var(--f-ui)} .td-jump small{font-size:10px}
+
+.g-hint{--d:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; text-align:center; width:100%; padding:16px; border-radius:26px; color:var(--ts-dim); background:rgba(255,255,255,.05); box-shadow:inset 0 0 0 1px var(--ts-line)}
+.g-hint svg{width:42px; height:42px; color:var(--ts-accent)}
+.g-hint p{margin:0; font:500 14px/1.45 var(--f-ui)}
+
+.g-stick{--d:block; position:relative; width:calc(var(--td) * 2.7); height:calc(var(--td) * 2.7); border-radius:50%; touch-action:none; user-select:none; -webkit-user-select:none;
+  background:radial-gradient(circle, rgba(255,255,255,.04), rgba(255,255,255,.11)); box-shadow:inset 0 0 0 1.5px var(--ts-line), inset 0 12px 30px rgba(0,0,0,.45)}
+.g-stick::before{content:""; position:absolute; inset:18%; border-radius:50%; box-shadow:inset 0 0 0 1px var(--ts-line)}
+.td-knob{position:absolute; left:50%; top:50%; width:40%; height:40%; margin:-20% 0 0 -20%; border-radius:50%; pointer-events:none;
+  background:radial-gradient(circle at 35% 30%, color-mix(in oklab, var(--shell-hi) 55%, #fff), color-mix(in oklab, var(--shell-hi) 80%, #1a1d3a)); box-shadow:0 8px 18px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.35)}
+.g-soccer{--d:flex; flex-direction:column; align-items:center}
+.td-act{width:calc(var(--td) * 2.2); height:calc(var(--td) * 2.2); border-radius:50%; font:800 20px var(--f-ui); letter-spacing:.1em; color:var(--ts-on-accent);
+  background:radial-gradient(circle at 35% 28%, #9bf5d2, #2fae84); box-shadow:inset 0 2px 0 rgba(255,255,255,.4), 0 14px 30px -8px rgba(47,174,132,.75), 0 0 0 6px rgba(124,242,193,.12)}
+.td-act small{font-size:9px; letter-spacing:.04em; max-width:78%; line-height:1.3; opacity:.8; text-align:center}
+.td-act.down{background:radial-gradient(circle at 35% 28%, #7be8bd, #23926d); box-shadow:inset 0 0 0 2px #fff, 0 0 34px -2px var(--ts-accent)}
+
+/* the pixel overlay inside the LCD is replaced by real dialogs while paused / game over */
+.phone:is([data-scheme=paused],[data-scheme=over]) .ov{display:none}
+
+/* ---------- LANDSCAPE: the screen is sized by the height; controls sit on both sides ---------- */
+@media (orientation:landscape) and (max-height:560px){
+  /* the controls are sized from the room actually left beside the screen (--side), so they can never overlap it on a short, narrow phone */
+  :root[data-controls=touch] .phone{--bar-h:48px; --lcd-h:calc(100dvh - 28px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); --side:calc((100vw - var(--lcd-h) * 1.28) / 2); --td:clamp(32px, min(13vh, calc((var(--side) - 30px) / 3)), 58px)}
+  :root[data-controls=touch] .ts-main{padding-inline:max(16px, env(safe-area-inset-left))}
+  .ts-view{max-width:none}
+  .ts-grid{grid-template-columns:repeat(4, 1fr)}
+  .ts-card .ts-art{aspect-ratio:16/9}
+  .ts-card-body small{display:none}
+  /* home: greeting and the two shortcuts share the first row, so the game cards are visible without scrolling */
+  .ts-home{display:grid; grid-template-columns:1fr auto; align-items:center; gap:12px 16px}
+  .ts-home .ts-hello{grid-column:1; grid-row:1}
+  .ts-home .ts-quick{grid-column:2; grid-row:1; grid-template-columns:auto auto}
+  .ts-home .ts-quick .ts-btn{min-height:46px}
+  .ts-home .ts-h{display:none}
+  .ts-home .ts-grid,.ts-home .ts-row,.ts-home .ts-foot{grid-column:1 / -1}
+  /* sheets: options side by side so the whole sheet fits a short screen */
+  .ts-sheet{max-height:94%; gap:10px; padding-top:8px; max-width:660px}
+  .ts-rows{display:grid; grid-template-columns:1fr 1fr; gap:10px; align-items:stretch}
+  .ts-sheet .ts-btn-lg{min-height:50px}
+  :root[data-controls=touch] .phone[data-view=game]{grid-template-columns:1fr auto 1fr; grid-template-rows:minmax(0,1fr); grid-template-areas:"left lcd right"}
+  :root[data-controls=touch] .phone[data-view=game]::before{display:none}
+  :root[data-controls=touch] .phone[data-view=game] .ts-bar{position:absolute; left:env(safe-area-inset-left); right:env(safe-area-inset-right); top:env(safe-area-inset-top); z-index:6; pointer-events:none; padding:4px 8px}
+  :root[data-controls=touch] .phone[data-view=game] .ts-bar > *{pointer-events:auto}
+  :root[data-controls=touch] .phone[data-view=game] .ts-title{visibility:hidden}
+  :root[data-controls=touch] .bezel{align-self:center; width:auto; height:var(--lcd-h); aspect-ratio:128/100; margin:0; border-radius:20px}
+  :root[data-controls=touch] .phone[data-view=game] .td{padding:44px 12px 12px}
+  .g-dpad{width:calc(var(--td) * 3 + 20px); height:calc(var(--td) * 3 + 20px)} /* 20px = the pad's padding and gaps, so each button is a full --td */
+  .td-big{height:calc(var(--td) * 2.2)}
+  .td-jump{height:calc(var(--td) * 1.5)}
+  .ts-dialog{width:min(440px, calc(100% - 40px)); padding:18px 20px}
+  .ts-dlg-actions{flex-direction:row; flex-wrap:wrap; justify-content:center; margin-top:14px}
+  .ts-dlg-actions .ts-btn{flex:1 1 130px; min-height:48px}
+  .ts-dlg-title{font-size:17px}
+  .ts-login{display:grid; grid-template-columns:1fr 1.2fr; align-items:center; column-gap:28px; gap:8px 28px}
+  .ts-login-hero{grid-row:1 / span 2}
+  .ts-card-form{padding:14px; gap:10px}
+  .ts-input{height:50px; padding-top:20px}
+  .ts-field-label{top:15px}
+  .ts-input:focus + .ts-field-label,.ts-input:not(:placeholder-shown) + .ts-field-label{top:6px}
+  .ts-eye{top:3px}
+  .ts-error{min-height:18px; font-size:13px}
+  .ts-form-actions .ts-btn{min-height:46px}
+}
+/* very short landscape screens: a slightly smaller game screen leaves the side columns wide enough for 44px buttons */
+@media (orientation:landscape) and (max-height:420px){
+  :root[data-controls=touch] .phone{--lcd-h:calc(100dvh - 44px - env(safe-area-inset-top) - env(safe-area-inset-bottom))}
+}
+/* roomy tablets / desktop in touch mode: a centred column */
+@media (min-width:700px) and (min-height:561px){
+  :root[data-controls=touch] .phone{max-width:620px; margin-inline:auto}
+  :root[data-controls=touch] .desk{background:radial-gradient(60% 50% at 50% 0%, #131838, #05060b)}
+}
+@media (prefers-reduced-motion: reduce){
+  .ts-view,.ts-sheet,.ts-dialog,.ts-scrim,.ts-toast,.ts-skel,.ts-card-form.shake{animation:none}
+  .ts-press.rip::after{animation:none}
+  .td-btn,.ts-btn,.ts-card{transition:none}
+}

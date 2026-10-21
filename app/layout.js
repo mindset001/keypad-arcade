@@ -1,5 +1,6 @@
 import { Press_Start_2P, VT323 } from 'next/font/google';
 import './globals.css';
+import { EARLY_SCRIPT } from '../lib/arcade/touch.js';
 
 const pixel = Press_Start_2P({ weight: '400', subsets: ['latin'], variable: '--font-pixel', display: 'swap' });
 const lcd = VT323({ weight: '400', subsets: ['latin'], variable: '--font-lcd', display: 'swap' });
@@ -16,7 +17,9 @@ export const viewport = { width: 'device-width', initialScale: 1, viewportFit: '
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" data-scroll-behavior="smooth" className={`${pixel.variable} ${lcd.variable}`}>
+    /* suppressHydrationWarning: the inline script in <head> sets data-controls / data-theme on <html> before React hydrates */
+    <html lang="en" data-scroll-behavior="smooth" suppressHydrationWarning className={`${pixel.variable} ${lcd.variable}`}>
+      <head><script dangerouslySetInnerHTML={{ __html: EARLY_SCRIPT }} /></head>
       <body>{children}</body>
     </html>
   );

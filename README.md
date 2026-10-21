@@ -46,11 +46,14 @@ app/
   admin/                   the admin players page (/admin)
   api/                     route handlers: auth/*, scores, league, prefs, admin/users, health
   globals.css              handset, LCD, keypad and the four colour themes
+  touch.css                the Android-style touch app (touch mode only)
 lib/
   arcade/                  the game engine (runs in the browser)
     index.js                 screens, input, game loop, auth wiring
     games/{snake,roll,bounce,soccer}.js   one file per game
     league.js                Soccer League season logic (pure)
+    ui/                      the touch app: touch-ui.js (screens), icons.js, art.js, dom.js
+    touch.js                 touch logic + the pre-paint script (pure, tested)
     share.js, data.js, draw.js, storage.js, sound.js, api.js
   api.js, auth.js, db.js   server helpers (route wrapper, sessions, Mongo connection)
   admin.js, admin-guard.js admin list helpers (pure) and the admin check
@@ -77,12 +80,26 @@ scripts/make-admin.mjs     grants/removes the admin role (database access requir
 
 ### Controls: keypad or touch
 
-Menu → **Controls** switches between two layouts. The choice is saved **on that device** (not on the account), so you can use touch on a phone and the keypad on a laptop. Until you choose, phones and tablets start in touch mode and computers on the keypad.
+Players **choose** between two layouts, and can change their mind at any time:
+
+- **First visit:** a "How do you want to play?" prompt offers *Classic keypad* or *Touch screen* and marks the one that suits the device (touch for phones and tablets, keypad for computers). Esc picks the recommended one.
+- **Always on screen:** a **Keypad | Touch** switch above the handset, and in touch mode a **Switch to keypad** button under the screen (hidden mid-game so a stray tap can't switch; it is there on the menu, pause and game-over screens).
+- **Menu → Controls** does the same.
+- **Links:** `/play?controls=keypad` and `/play?controls=touch` choose before the game loads (the landing page uses them for "Classic keypad / Touch screen" and "Play with the keypad / touch").
+
+The choice is saved **on that device** (not on the account), so you can use touch on a phone and the keypad on a laptop. A small script in `<head>` (`EARLY_SCRIPT` in `lib/arcade/touch.js`) applies the saved choice and handset colour to `<html>` before the first paint, so there is no flash of the wrong layout.
 
 - **Keypad:** the Nokia handset with D-pad, Select, C and number keys (and the keyboard).
-- **Touch:** the handset frame goes away and the screen fills the width, with an Android-style control deck underneath (at the sides in landscape). Buttons are 44px or bigger and hold-aware, and a thumb that slides off a held button doesn't drop it. Menus: tap a row, or use the D-pad, OK and Back. Snake: swipe anywhere. Rapid Roll: big left and right buttons. Bounce: left and right, plus HIGH and LOW. Soccer: a joystick (eight directions) and a KICK button: tap to pass or tackle, hold to shoot. Paused and game-over screens get big Resume / Quit / Again / Share buttons that mirror the screen's own options. Phones also give a tiny vibration on each press while sound is on.
+- **Touch:** an Android-style app instead of the handset. The pixel LCD is only used for the game itself; everything else is real touch UI:
+  - **Home:** a card for each game (pixel art + your best score), shortcuts to High scores and How to play, a Controls switch, and a greeting (guest or signed in).
+  - **Game options:** a bottom sheet with a level stepper, maze chips (Snake), quick/league mode (Soccer) and a big Play button.
+  - **Scores, How to play, League, Login:** proper screens (ranked list with medals and a "just me" filter; the league table with your club highlighted; a form with floating labels and a show/hide eye).
+  - **Settings** (gear): Controls (Keypad | Touch), handset colour swatches, sound, and sign in / log out.
+  - **In a game:** the screen sits in a glowing frame with a glass control sheet below. Snake: swipe anywhere, or the round pad. Rapid Roll: a big button under each thumb. Bounce: left/right, plus HIGH and LOW. Soccer: an eight-way joystick and a KICK button (tap to pass or tackle, hold to shoot). Pause is in the app bar; **Paused** and **Game over** are real dialogs (Resume / Quit; Again / Share / Menu). Back (the arrow, or Esc) pauses mid-game, and dismisses the Paused dialog like Android's back button.
+  - **Landscape:** on short screens the game screen is sized by the height and centred, with the controls on its left and right; home, sheets and login rearrange so everything fits without scrolling. Larger screens keep the controls below.
+  - Every button is 44px or bigger, holds are tracked per finger (a thumb that slides off a held button doesn't drop it), phones give a tiny vibration while sound is on, and presses have a soft ripple.
 
-The keyboard works in both modes. The logic (joystick angles, swipe detection, which controls to show, the default choice) is in `lib/arcade/touch.js` and unit-tested; the layout is the "touch mode" block at the end of `app/globals.css`.
+The keyboard works in both modes. The logic (joystick angles, swipe detection, which controls to show, the default choice) is in `lib/arcade/touch.js` and unit-tested. The touch screens are `lib/arcade/ui/touch-ui.js` (views), `ui/icons.js`, `ui/art.js` and `ui/dom.js`; they reuse the engine's own scores, league, sign-in and preferences (nothing is duplicated). All touch styling is in `app/touch.css`, scoped to `:root[data-controls=touch]` so the keypad layout is untouched.
 
 ### Admin page
 

@@ -47,9 +47,9 @@ test('swipe: needs a minimum distance, then the larger axis wins', () => {
 
 /* the pre-paint script and defaultControls() must make the same decision */
 import { EARLY_SCRIPT } from '../lib/arcade/touch.js';
-function runEarly({ stored = {}, coarse = false, width = 1280 } = {}){
+function runEarly({ stored = {}, coarse = false, width = 1280, search = '' } = {}){
   const el = { dataset:{} }, ls = { getItem: k => (k in stored ? JSON.stringify(stored[k]) : null) };
-  new Function('document', 'localStorage', 'matchMedia', 'innerWidth', EARLY_SCRIPT)({ currentScript:{ parentElement:el } }, ls, () => ({ matches:coarse }), width);
+  new Function('document', 'localStorage', 'matchMedia', 'innerWidth', 'location', EARLY_SCRIPT)({ documentElement:el }, ls, () => ({ matches:coarse }), width, { search });
   return el.dataset;
 }
 
@@ -64,5 +64,14 @@ test('early script: a saved choice wins; colour is applied; junk is ignored', ()
   assert.equal(runEarly({ stored:{ ka_controls:'hologram' }, coarse:true, width:390 }).controls, 'touch', 'an unknown saved value falls back to the device default');
   assert.equal(runEarly({ stored:{ ka_theme:'red' } }).theme, 'red');
   assert.equal(runEarly({ stored:{ ka_theme:'<script>' } }).theme, undefined, 'only the four known colours are ever applied');
-  assert.doesNotThrow(() => new Function('document', 'localStorage', 'matchMedia', 'innerWidth', EARLY_SCRIPT)({ currentScript:{ parentElement:{ dataset:{} } } }, { getItem(){ throw new Error('blocked'); } }, () => ({ matches:false }), 1280), 'blocked storage (private mode) must not break the page');
+  assert.doesNotThrow(() => new Function('document', 'localStorage', 'matchMedia', 'innerWidth', 'location', EARLY_SCRIPT)({ documentElement:{ dataset:{} } }, { getItem(){ throw new Error('blocked'); } }, () => ({ matches:false }), 1280, { search:'' }), 'blocked storage (private mode) must not break the page');
+});
+
+test('early script: a ?controls= link beats the saved choice and the device default', () => {
+  assert.equal(runEarly({ search:'?controls=touch', coarse:false, width:1920 }).controls, 'touch');
+  assert.equal(runEarly({ search:'?controls=keypad', coarse:true, width:390 }).controls, 'keypad');
+  assert.equal(runEarly({ search:'?controls=keypad', stored:{ ka_controls:'touch' } }).controls, 'keypad');
+  assert.equal(runEarly({ search:'?controls=hologram', stored:{ ka_controls:'touch' } }).controls, 'touch', 'an unknown value in the link is ignored');
+  assert.equal(runEarly({ search:'?x=1&controls=touch' }).controls, 'touch');
+  assert.equal(runEarly({ search:'' }).controls, 'keypad');
 });

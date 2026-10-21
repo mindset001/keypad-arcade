@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import Link from 'next/link';
 import { initArcade } from '../lib/arcade';
+import './touch.css'; // the touch app's styles load with the game, not with the landing page
 
 /* Static markup only. The engine in lib/arcade.js owns every node below once
    mounted (toggling hidden/classes/text), so nothing here is driven by React state. */
@@ -14,6 +15,11 @@ export default function Arcade() {
       <header className="masthead">
         <p className="brand">Keypad Arcade</p>
         <p className="byline">A Demlinks game</p>
+        <div className="ctl-switch" role="group" aria-label="Controls">
+          <span>Controls</span>
+          <button type="button" data-controls="keypad" aria-pressed="true">Keypad</button>
+          <button type="button" data-controls="touch" aria-pressed="false">Touch</button>
+        </div>
       </header>
 
       <div className="phone" id="phone">
@@ -112,51 +118,67 @@ export default function Arcade() {
           <button className="key" data-k="#" tabIndex={-1}>#<small>sound</small></button>
         </div>
 
-        {/* Touch mode only (shown by CSS when Controls = Touch). Same actions as the keypad: the engine binds these buttons too. */}
+        {/* ---- Touch mode (CSS shows these only when Controls = Touch) ---- */}
+        <header className="ts-bar" id="tsBar">
+          <button type="button" className="ts-ib ts-press" id="tsBack" aria-label="Back" data-icon="back" hidden></button>
+          <div className="ts-title"><span className="ts-logo" id="tsLogo" aria-hidden="true" data-art="snake"></span><span id="tsTitleText">Keypad Arcade</span></div>
+          <div className="ts-actions">
+            <button type="button" className="ts-ib ts-press" id="tsPause" aria-label="Pause" data-icon="pause" hidden></button>
+            <button type="button" className="ts-ib ts-press" id="tsSound" aria-label="Sound"></button>
+            <button type="button" className="ts-ib ts-press" id="tsSettings" aria-label="Settings" data-icon="tune"></button>
+          </div>
+        </header>
+        <main className="ts-main" id="tsMain"></main>
+        <div className="ts-host" id="tsHost"></div>
+
+        {/* Game controls (touch mode): same actions as the keypad; the engine binds these buttons too. */}
         <div className="td td-left">
           <div className="g g-dpad" role="group" aria-label="Directions">
-            <button className="td-btn tdb-up" data-k="up" tabIndex={-1} aria-label="Up">▲</button>
-            <button className="td-btn tdb-left" data-k="left" tabIndex={-1} aria-label="Left">◀</button>
+            <button className="td-btn tdb-up" data-k="up" data-icon="chevU" tabIndex={-1} aria-label="Up"></button>
+            <button className="td-btn tdb-left" data-k="left" data-icon="chevL" tabIndex={-1} aria-label="Left"></button>
             <span className="td-hub" aria-hidden="true"></span>
-            <button className="td-btn tdb-right" data-k="right" tabIndex={-1} aria-label="Right">▶</button>
-            <button className="td-btn tdb-down" data-k="down" tabIndex={-1} aria-label="Down">▼</button>
+            <button className="td-btn tdb-right" data-k="right" data-icon="chevR" tabIndex={-1} aria-label="Right"></button>
+            <button className="td-btn tdb-down" data-k="down" data-icon="chevD" tabIndex={-1} aria-label="Down"></button>
           </div>
+          <div className="g g-roll-l"><button className="td-btn td-big" data-k="left" data-icon="chevL" tabIndex={-1} aria-label="Left"></button></div>
           <div className="g g-lr" role="group" aria-label="Move">
-            <button className="td-btn" data-k="left" tabIndex={-1} aria-label="Left">◀</button>
-            <button className="td-btn" data-k="right" tabIndex={-1} aria-label="Right">▶</button>
+            <button className="td-btn" data-k="left" data-icon="chevL" tabIndex={-1} aria-label="Left"></button>
+            <button className="td-btn" data-k="right" data-icon="chevR" tabIndex={-1} aria-label="Right"></button>
           </div>
           <div className="g g-stick" id="stick" role="application" aria-label="Move stick"><span className="td-knob" id="stickKnob"></span></div>
         </div>
         <div className="td td-right">
-          <div className="g g-ok">
-            <button className="td-btn td-ok" data-k="sel" tabIndex={-1}>OK</button>
-            <button className="td-btn td-back" data-k="c" tabIndex={-1}>Back</button>
-          </div>
-          <div className="g g-pause">
-            <button className="td-btn td-pause" data-k="*" tabIndex={-1} aria-label="Pause"><span>❚❚</span><small>Pause</small></button>
-          </div>
+          <div className="g g-roll-r"><button className="td-btn td-big" data-k="right" data-icon="chevR" tabIndex={-1} aria-label="Right"></button></div>
+          <div className="g g-hint" aria-hidden="true"><span data-icon="swipe"></span><p>Swipe anywhere on the screen to turn, or use the pad</p></div>
           <div className="g g-bounce">
-            <button className="td-btn td-jump" data-k="up" tabIndex={-1} aria-label="High bounce"><span>▲</span><small>High</small></button>
-            <button className="td-btn td-jump" data-k="down" tabIndex={-1} aria-label="Low bounce"><span>▼</span><small>Low</small></button>
-            <button className="td-btn td-mini" data-k="*" tabIndex={-1} aria-label="Pause">❚❚ Pause</button>
+            <button className="td-btn td-jump" data-k="up" tabIndex={-1} aria-label="High bounce"><span data-icon="jumpHi"></span><span><b>High</b><small>bounce</small></span></button>
+            <button className="td-btn td-jump" data-k="down" tabIndex={-1} aria-label="Low bounce"><span data-icon="jumpLo"></span><span><b>Low</b><small>bounce</small></span></button>
           </div>
           <div className="g g-soccer">
             <button className="td-btn td-act" data-k="sel" tabIndex={-1} aria-label="Kick: tap to pass or tackle, hold to shoot"><span>KICK</span><small>tap pass · hold shoot</small></button>
-            <button className="td-btn td-mini" data-k="*" tabIndex={-1} aria-label="Pause">❚❚ Pause</button>
-          </div>
-          <div className="g g-paused">
-            <button className="td-btn td-wide td-ok" data-k="sel" tabIndex={-1}>Resume</button>
-            <button className="td-btn td-wide td-back" data-k="c" tabIndex={-1}>Quit</button>
-          </div>
-          <div className="g g-over">
-            <button className="td-btn td-wide td-ok" data-k="sel" tabIndex={-1}>Again</button>
-            <button className="td-btn td-wide td-share" data-k="0" tabIndex={-1}>Share</button>
-            <button className="td-btn td-wide td-back" data-k="c" tabIndex={-1}>Menu</button>
           </div>
         </div>
       </div>
 
       <p className="hint">Move with <kbd>←</kbd><kbd>↑</kbd><kbd>→</kbd><kbd>↓</kbd> or <kbd>2</kbd><kbd>4</kbd><kbd>6</kbd><kbd>8</kbd>. <kbd>Enter</kbd> or <kbd>5</kbd> selects, <kbd>Esc</kbd> goes back, <kbd>P</kbd> pauses, <kbd>M</kbd> mutes, <kbd>H</kbd> shares your score after a game. On a phone, use Controls in the menu to switch between this keypad and full-screen touch.</p>
+
+      {/* First visit: choose how to play. Shown by the engine until a choice is saved. */}
+      <div className="chooser" id="chooser" role="dialog" aria-modal="true" aria-labelledby="chooserTitle" hidden>
+        <div className="chooser-card">
+          <h2 id="chooserTitle">How do you want to play?</h2>
+          <p>Pick one now. You can switch any time with the Keypad / Touch switch, or from the menu under Controls.</p>
+          <div className="chooser-opts">
+            <button type="button" className="chooser-opt" data-choose="keypad">
+              <svg className="chooser-art" viewBox="0 0 60 80" aria-hidden="true"><rect x="6" y="2" width="48" height="76" rx="11" fill="#3a4080"/><rect x="12" y="9" width="36" height="24" rx="2" fill="#a9c07f"/><circle cx="30" cy="42" r="4" fill="#7cf2c1"/><g fill="#6b74c0"><rect x="14" y="51" width="9" height="5" rx="2.5"/><rect x="25.5" y="51" width="9" height="5" rx="2.5"/><rect x="37" y="51" width="9" height="5" rx="2.5"/><rect x="14" y="59" width="9" height="5" rx="2.5"/><rect x="25.5" y="59" width="9" height="5" rx="2.5"/><rect x="37" y="59" width="9" height="5" rx="2.5"/><rect x="14" y="67" width="9" height="5" rx="2.5"/><rect x="25.5" y="67" width="9" height="5" rx="2.5"/><rect x="37" y="67" width="9" height="5" rx="2.5"/></g></svg>
+              <span className="chooser-txt"><b>Classic keypad</b><small>The Nokia handset with a D-pad and number keys. Great with a keyboard.</small><em className="chooser-rec" hidden>Recommended for your device</em></span>
+            </button>
+            <button type="button" className="chooser-opt" data-choose="touch">
+              <svg className="chooser-art" viewBox="0 0 60 80" aria-hidden="true"><rect x="2" y="2" width="56" height="76" rx="9" fill="#12142b" stroke="#5560a8" strokeWidth="1.5"/><rect x="5" y="5" width="50" height="32" rx="2" fill="#a9c07f"/><path d="M15 45h6v6h6v6h-6v6h-6v-6H9v-6h6z" fill="#5560a8"/><circle cx="45" cy="52" r="7.5" fill="#4fd6a4"/><circle cx="38" cy="67" r="5" fill="#ff8fa0"/></svg>
+              <span className="chooser-txt"><b>Touch screen</b><small>Full screen with Android-style on-screen buttons. Great on phones and tablets.</small><em className="chooser-rec" hidden>Recommended for your device</em></span>
+            </button>
+          </div>
+        </div>
+      </div>
 
       <footer className="credit">Made by Demlinks · © {new Date().getFullYear()} · <Link href="/">About</Link></footer>
     </>

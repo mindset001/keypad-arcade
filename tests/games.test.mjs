@@ -140,7 +140,7 @@ test('soccer: a whole match finishes once, with whole-number goals', () => {
   assert.ok(g.time >= g.len);
 });
 
-test('soccer: a goal pauses play, shows GOAL! and restarts from kick-off', () => {
+test('soccer: a goal pauses play, shows GOAL! and restarts from kick-off', () => seeded(21, () => {
   const e = makeEnv(), S = createSoccer(e), g = new S({ level:3, mode:0 });
   run(g, 1.5); assert.equal(g.phase, 'play');
   Object.assign(g.ball, { x:PR + 2, y:44, owner:null, vx:0, vy:0 }); g.update(STEP);
@@ -149,9 +149,9 @@ test('soccer: a goal pauses play, shows GOAL! and restarts from kick-off', () =>
   assert.equal(g.phase === 'kickoff' || g.phase === 'play', true);
   assert.ok(e.calls.hidden >= 1);
   const p0 = g.players[1]; assert.ok(Math.abs(p0.x - p0.bx) < 40, 'players reset towards their start positions');
-});
+}));
 
-test('soccer: tap passes to a team-mate, a hold shoots harder, a tackle steals', () => {
+test('soccer: tap passes to a team-mate, a hold shoots harder, a tackle steals', () => seeded(21, () => {
   const g = new Soccer({ level:3, mode:0 }); run(g, 1.2);
   const me = g.players.find(p => p.team === 0 && !p.gk); g.ctl = me; g.ball.owner = me; me.fx = 1; me.fy = 0;
   g.players.filter(p => p.team === 0 && p !== me && !p.gk).forEach((p, i) => { p.x = me.x + 25 + i; p.y = me.y; });
@@ -168,7 +168,7 @@ test('soccer: tap passes to a team-mate, a hold shoots harder, a tackle steals',
   Object.assign(me, { x:100, y:44, fx:1, fy:0, cd:0, stun:0, lunge:0, lcd:0 }); Object.assign(foe, { x:106, y:44, fx:-1, fy:0, stun:0, cd:0 });
   g.ball.owner = foe; g.ctl = me; g.selT = null; g.key('select'); run(g, 0.3);
   assert.equal(g.ball.owner, me, 'slide tackle wins the ball');
-});
+}));
 
 test('soccer: higher levels are harder (same bot, same seeds)', () => {
   const avg = lvl => { let d = 0; for(let s = 1; s <= 6; s++){ const { g } = playMatch(lvl, s); d += g.goals[0] - g.goals[1]; } return d / 6; };

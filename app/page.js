@@ -84,6 +84,10 @@ export default function Landing() {
               <Link href="/play" className="lp-btn">Play now</Link>
               <a href="#games" className="lp-btn lp-btn-ghost">Meet the games</a>
             </div>
+            <p className="lp-choose">Choose how you play:{' '}
+              <Link href="/play?controls=keypad">Classic keypad</Link> <span aria-hidden="true">·</span>{' '}
+              <Link href="/play?controls=touch">Touch screen</Link>
+            </p>
             <ul className="lp-badges" aria-label="Highlights">
               <li>4 games</li><li>Keyboard and touch</li><li>Leaderboards</li><li>Free</li>
             </ul>
@@ -138,6 +142,10 @@ export default function Landing() {
                   <div><dt>Switch any time</dt><dd>Menu, then Controls. Your choice is remembered on that device</dd></div>
                 </dl>
               </div>
+            </div>
+            <div className="lp-cta lp-center">
+              <Link href="/play?controls=keypad" className="lp-btn lp-btn-ghost">Play with the keypad</Link>
+              <Link href="/play?controls=touch" className="lp-btn">Play with touch</Link>
             </div>
           </Reveal>
         </section>
