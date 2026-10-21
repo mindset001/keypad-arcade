@@ -17,7 +17,7 @@ export const POST = route(async request => {
   await User.init(); // make sure the unique index exists before the first insert
   if(await User.exists({ nameLower:lower })) throw new HttpError(409, 'That name is taken. Log in instead.');
   let user;
-  try{ user = await User.create({ name:display, nameLower:lower, passHash:await hashPassword(password), theme:THEMES.includes(theme) ? theme : THEMES[0] }); }
+  try{ user = await User.create({ name:display, nameLower:lower, passHash:await hashPassword(password), theme:THEMES.includes(theme) ? theme : THEMES[0], lastLoginAt:new Date() }); }
   catch(e){ if(e.code === 11000) throw new HttpError(409, 'That name is taken. Log in instead.'); throw e; }
   const res = json({ name:user.name, theme:user.theme }, 201);
   setSessionCookie(res, await signSession(user), request);

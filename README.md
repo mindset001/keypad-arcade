@@ -34,6 +34,7 @@ npm run build && npm start      # production
 | --- | --- |
 | `npm run dev` / `build` / `start` | Next.js |
 | `npm test` | Unit tests (Node's built-in runner, no extra packages, about a second) |
+| `npm run admin -- <name>` | Makes a registered player an admin (`--remove` to undo, `--list` to see admins). See *Admin page* below |
 | `npm run smoke` | Calls every API endpoint on a running server. `BASE=http://localhost:3001 npm run smoke` if it is not on port 3000. Never deletes data; refuses non-local hosts unless `I_KNOW=1` |
 
 ## How it fits together
@@ -42,7 +43,8 @@ npm run build && npm start      # production
 app/
   page.js, landing/        3D landing page (CSS 3D, no libraries)
   play/                    the game route; arcade.js holds the handset markup
-  api/                     route handlers: auth/*, scores, league, prefs
+  admin/                   the admin players page (/admin)
+  api/                     route handlers: auth/*, scores, league, prefs, admin/users, health
   globals.css              handset, LCD, keypad and the four colour themes
 lib/
   arcade/                  the game engine (runs in the browser)
@@ -51,9 +53,12 @@ lib/
     league.js                Soccer League season logic (pure)
     share.js, data.js, draw.js, storage.js, sound.js, api.js
   api.js, auth.js, db.js   server helpers (route wrapper, sessions, Mongo connection)
+  admin.js, admin-guard.js admin list helpers (pure) and the admin check
+  limits.js, ratelimit.js  login / sign-up limiting
 models/                    Mongoose: User, Score, League
 tests/                     unit tests
 scripts/smoke-api.sh       API smoke test
+scripts/make-admin.mjs     grants/removes the admin role (database access required)
 ```
 
 **Accounts.** Name + password. Passwords are bcrypt-hashed; the session is a signed, `httpOnly`, `SameSite=Lax` cookie valid for 30 days (marked `Secure` whenever the connection is https). Names are case-insensitive and unique; 2-12 letters, numbers or `_`; a few names (`guest`, `admin`, `root`, `system`, `demlinks`) are reserved. Passwords are 6+ characters and at most 72 **bytes**, because bcrypt ignores everything after that. The rules live in one file, `lib/arcade/validate.js`, used by both the game and the server. The password field has an eye button to show or hide what you type.
@@ -69,6 +74,22 @@ scripts/smoke-api.sh       API smoke test
 **Handset colour.** Menu → Handset cycles violet / blue / red / black. Guests keep it in the browser; logged-in players save it on their account.
 
 **Share.** After a game with a score, press `H`, the `0` key or the **Share** soft key. Phones open the native share sheet; computers copy the text and link.
+
+### Admin page
+
+`/admin` lists every registered player: name, join date, last login, handset colour, how many scores they have posted and their best. It has totals, name search, sorting, paging and a **Download CSV** button. It is read-only: it cannot change or delete anyone. No emails or passwords are stored, so none can be shown.
+
+**Making someone an admin.** They register like anyone else, then you run:
+
+```bash
+npm run admin -- ada            # make "ada" an admin (not case-sensitive)
+npm run admin -- ada --remove   # take it away
+npm run admin -- --list         # who is an admin now
+```
+
+The command uses the database in `.env.local` and prints its name first, so check it is the one your live site uses. **The role can only be granted this way, by someone with database access.** No page or API can grant it, and signing up with a name like "admin" is blocked. The role is checked against the database on every request, so removing it works immediately, even for someone still logged in.
+
+Everyone who is not an admin (logged out or an ordinary player) gets the normal 404 for `/admin` and for `/api/admin/users`, with no admin UI, title or data. The page's bundle names can still appear in that 404's page data, so the protection is the server-side check, not secrecy of the URL.
 
 ### Adding a game
 

@@ -23,6 +23,7 @@ export const POST = route(async request => {
     throw new HttpError(401, 'Wrong name or password.');
   }
   await limiter.clear(nameKey);
+  await User.updateOne({ _id:user._id }, { lastLoginAt:new Date() });
   const res = json({ name:user.name, theme:user.theme });
   setSessionCookie(res, await signSession(user), request);
   return res;

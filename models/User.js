@@ -5,7 +5,9 @@ const UserSchema = new mongoose.Schema({
   name:      { type:String, required:true },                         // as typed, for display
   nameLower: { type:String, required:true, unique:true, index:true }, // case-insensitive identity
   passHash:  { type:String, required:true, select:false },
-  theme:     { type:String, enum:THEMES, default:THEMES[0] }                   // handset colour
+  theme:     { type:String, enum:THEMES, default:THEMES[0] },                  // handset colour
+  role:      { type:String, enum:['user', 'admin'], default:'user' },           // set ONLY by `npm run admin` (never by any API)
+  lastLoginAt: { type:Date }
 }, { timestamps:true });
 
 /* dev hot-reload: drop a cached model so a changed schema (e.g. a new field) is never silently ignored */
