@@ -75,6 +75,15 @@ scripts/make-admin.mjs     grants/removes the admin role (database access requir
 
 **Share.** After a game with a score, press `H`, the `0` key or the **Share** soft key. Phones open the native share sheet; computers copy the text and link.
 
+### Controls: keypad or touch
+
+Menu → **Controls** switches between two layouts. The choice is saved **on that device** (not on the account), so you can use touch on a phone and the keypad on a laptop. Until you choose, phones and tablets start in touch mode and computers on the keypad.
+
+- **Keypad:** the Nokia handset with D-pad, Select, C and number keys (and the keyboard).
+- **Touch:** the handset frame goes away and the screen fills the width, with an Android-style control deck underneath (at the sides in landscape). Buttons are 44px or bigger and hold-aware, and a thumb that slides off a held button doesn't drop it. Menus: tap a row, or use the D-pad, OK and Back. Snake: swipe anywhere. Rapid Roll: big left and right buttons. Bounce: left and right, plus HIGH and LOW. Soccer: a joystick (eight directions) and a KICK button: tap to pass or tackle, hold to shoot. Paused and game-over screens get big Resume / Quit / Again / Share buttons that mirror the screen's own options. Phones also give a tiny vibration on each press while sound is on.
+
+The keyboard works in both modes. The logic (joystick angles, swipe detection, which controls to show, the default choice) is in `lib/arcade/touch.js` and unit-tested; the layout is the "touch mode" block at the end of `app/globals.css`.
+
 ### Admin page
 
 `/admin` lists every registered player: name, join date, last login, handset colour, how many scores they have posted and their best. It has totals, name search, sorting, paging and a **Download CSV** button. It is read-only: it cannot change or delete anyone. No emails or passwords are stored, so none can be shown.

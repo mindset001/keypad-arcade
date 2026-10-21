@@ -117,7 +117,7 @@ export default function Landing() {
           <Reveal className="lp-head">
             <p className="lp-eyebrow">How it plays</p>
             <h2>Keys, taps, or both.</h2>
-            <p>Use the on-screen keypad with your thumbs, or the keyboard on a computer. The same buttons work everywhere.</p>
+            <p>Play on the Nokia keypad, or switch to full-screen touch controls on your phone. On a computer, the keyboard works with both.</p>
           </Reveal>
           <Reveal>
             <div className="lp-controls">
@@ -133,10 +133,9 @@ export default function Landing() {
               <div className="lp-ctl-card">
                 <h3>On a phone</h3>
                 <dl>
-                  <div><dt>D-pad</dt><dd>Move in all four directions</dd></div>
-                  <div><dt>Select</dt><dd>Choose, pass or shoot. Hold to shoot harder</dd></div>
-                  <div><dt>C</dt><dd>Back</dd></div>
-                  <div><dt>* and #</dt><dd>Pause and sound</dd></div>
+                  <div><dt>Touch controls</dt><dd>Full screen with big buttons. Swipe to steer Snake, a joystick and KICK button for Soccer. Phones start here</dd></div>
+                  <div><dt>Keypad</dt><dd>Prefer the Nokia feel? Tap the keypad: D-pad, Select and C</dd></div>
+                  <div><dt>Switch any time</dt><dd>Menu, then Controls. Your choice is remembered on that device</dd></div>
                 </dl>
               </div>
             </div>

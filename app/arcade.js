@@ -111,9 +111,52 @@ export default function Arcade() {
           <button className="key" data-k="0" tabIndex={-1}>0<small>share</small></button>
           <button className="key" data-k="#" tabIndex={-1}>#<small>sound</small></button>
         </div>
+
+        {/* Touch mode only (shown by CSS when Controls = Touch). Same actions as the keypad: the engine binds these buttons too. */}
+        <div className="td td-left">
+          <div className="g g-dpad" role="group" aria-label="Directions">
+            <button className="td-btn tdb-up" data-k="up" tabIndex={-1} aria-label="Up">▲</button>
+            <button className="td-btn tdb-left" data-k="left" tabIndex={-1} aria-label="Left">◀</button>
+            <span className="td-hub" aria-hidden="true"></span>
+            <button className="td-btn tdb-right" data-k="right" tabIndex={-1} aria-label="Right">▶</button>
+            <button className="td-btn tdb-down" data-k="down" tabIndex={-1} aria-label="Down">▼</button>
+          </div>
+          <div className="g g-lr" role="group" aria-label="Move">
+            <button className="td-btn" data-k="left" tabIndex={-1} aria-label="Left">◀</button>
+            <button className="td-btn" data-k="right" tabIndex={-1} aria-label="Right">▶</button>
+          </div>
+          <div className="g g-stick" id="stick" role="application" aria-label="Move stick"><span className="td-knob" id="stickKnob"></span></div>
+        </div>
+        <div className="td td-right">
+          <div className="g g-ok">
+            <button className="td-btn td-ok" data-k="sel" tabIndex={-1}>OK</button>
+            <button className="td-btn td-back" data-k="c" tabIndex={-1}>Back</button>
+          </div>
+          <div className="g g-pause">
+            <button className="td-btn td-pause" data-k="*" tabIndex={-1} aria-label="Pause"><span>❚❚</span><small>Pause</small></button>
+          </div>
+          <div className="g g-bounce">
+            <button className="td-btn td-jump" data-k="up" tabIndex={-1} aria-label="High bounce"><span>▲</span><small>High</small></button>
+            <button className="td-btn td-jump" data-k="down" tabIndex={-1} aria-label="Low bounce"><span>▼</span><small>Low</small></button>
+            <button className="td-btn td-mini" data-k="*" tabIndex={-1} aria-label="Pause">❚❚ Pause</button>
+          </div>
+          <div className="g g-soccer">
+            <button className="td-btn td-act" data-k="sel" tabIndex={-1} aria-label="Kick: tap to pass or tackle, hold to shoot"><span>KICK</span><small>tap pass · hold shoot</small></button>
+            <button className="td-btn td-mini" data-k="*" tabIndex={-1} aria-label="Pause">❚❚ Pause</button>
+          </div>
+          <div className="g g-paused">
+            <button className="td-btn td-wide td-ok" data-k="sel" tabIndex={-1}>Resume</button>
+            <button className="td-btn td-wide td-back" data-k="c" tabIndex={-1}>Quit</button>
+          </div>
+          <div className="g g-over">
+            <button className="td-btn td-wide td-ok" data-k="sel" tabIndex={-1}>Again</button>
+            <button className="td-btn td-wide td-share" data-k="0" tabIndex={-1}>Share</button>
+            <button className="td-btn td-wide td-back" data-k="c" tabIndex={-1}>Menu</button>
+          </div>
+        </div>
       </div>
 
-      <p className="hint">Move with <kbd>←</kbd><kbd>↑</kbd><kbd>→</kbd><kbd>↓</kbd> or <kbd>2</kbd><kbd>4</kbd><kbd>6</kbd><kbd>8</kbd>. <kbd>Enter</kbd> or <kbd>5</kbd> selects, <kbd>Esc</kbd> goes back, <kbd>P</kbd> pauses, <kbd>M</kbd> mutes, <kbd>H</kbd> shares your score after a game. On a phone, tap the keypad.</p>
+      <p className="hint">Move with <kbd>←</kbd><kbd>↑</kbd><kbd>→</kbd><kbd>↓</kbd> or <kbd>2</kbd><kbd>4</kbd><kbd>6</kbd><kbd>8</kbd>. <kbd>Enter</kbd> or <kbd>5</kbd> selects, <kbd>Esc</kbd> goes back, <kbd>P</kbd> pauses, <kbd>M</kbd> mutes, <kbd>H</kbd> shares your score after a game. On a phone, use Controls in the menu to switch between this keypad and full-screen touch.</p>
 
       <footer className="credit">Made by Demlinks · © {new Date().getFullYear()} · <Link href="/">About</Link></footer>
     </>
