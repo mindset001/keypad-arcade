@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import Link from 'next/link';
 import { initArcade } from '../lib/arcade';
 
 /* Static markup only. The engine in lib/arcade.js owns every node below once
@@ -108,7 +109,7 @@ export default function Arcade() {
 
       <p className="hint">Move with <kbd>←</kbd><kbd>↑</kbd><kbd>→</kbd><kbd>↓</kbd> or <kbd>2</kbd><kbd>4</kbd><kbd>6</kbd><kbd>8</kbd>. <kbd>Enter</kbd> or <kbd>5</kbd> selects, <kbd>Esc</kbd> goes back, <kbd>P</kbd> pauses, <kbd>M</kbd> mutes. On a phone, tap the keypad.</p>
 
-      <footer className="credit">Made by Demlinks · © {new Date().getFullYear()}</footer>
+      <footer className="credit">Made by Demlinks · © {new Date().getFullYear()} · <Link href="/">About</Link></footer>
     </>
   );
 }

@@ -6,7 +6,7 @@ const lcd = VT323({ weight: '400', subsets: ['latin'], variable: '--font-lcd', d
 
 export const metadata = {
   title: 'Keypad Arcade — a Demlinks game',
-  description: 'Snake Xenzia, Rapid Roll and Bounce in a Nokia-style handset. Made by Demlinks.',
+  description: 'Four classic phone games on one Nokia-style handset: Snake Xenzia, Rapid Roll, Bounce and Soccer League. Play free in your browser. Made by Demlinks.',
   authors: [{ name: 'Demlinks' }],
   creator: 'Demlinks',
   publisher: 'Demlinks',
@@ -16,7 +16,7 @@ export const viewport = { width: 'device-width', initialScale: 1, viewportFit: '
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className={`${pixel.variable} ${lcd.variable}`}>
+    <html lang="en" data-scroll-behavior="smooth" className={`${pixel.variable} ${lcd.variable}`}>
       <body>{children}</body>
     </html>
   );
