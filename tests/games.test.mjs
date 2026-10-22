@@ -185,3 +185,40 @@ test('scores: one row per player, their highest, best first', () => {
   assert.equal(rows[0].at, 2);
   assert.deepEqual(bestPerPlayer(null), []);
 });
+
+/* ---------------- Table Tennis ---------------- */
+import { createTennis } from '../lib/arcade/games/tennis.js';
+const Tennis = createTennis(env);
+/* a bot that follows the ball with the player's keys */
+const tennisBot = g => { const d = g.b.y + 1.5 - g.py; g.keyUp('up'); g.keyUp('down'); if(d < -2) g.key('up'); else if(d > 2) g.key('down'); };
+function playTennis(level, bot){
+  const g = new Tennis({ level }); let over = null; g.onOver = s => { over = s; };
+  for(let i = 0; i < 60 * 600 && over === null; i++){ if(bot) tennisBot(g); g.update(STEP); }
+  return { g, over };
+}
+test('table tennis: a match ends once, first to 7, with a positive whole score when you win', () => seeded(5, () => {
+  const { g, over } = playTennis(1, true);
+  assert.ok(over !== null, 'the match finished');
+  assert.ok(Math.max(g.you, g.cpu) === 7 && Math.min(g.you, g.cpu) < 7);
+  assert.equal(over, g.score); assert.ok(Number.isInteger(over));
+  if(g.won) assert.ok(over >= g.you * 10 + 50);
+}));
+test('table tennis: standing still loses, and the keys move the paddle inside the table', () => seeded(6, () => {
+  const { g, over } = playTennis(3, false);
+  assert.ok(g.cpu === 7 && !g.won); assert.equal(over, g.you * 10 * 3);
+  const h = new Tennis({ level:1 }); h.key('up'); for(let i = 0; i < 200; i++) h.update(STEP);
+  assert.ok(h.py >= 6 + 7 - 0.01 && h.py < 40); h.keyUp('up'); h.key('down'); for(let i = 0; i < 400; i++) h.update(STEP); assert.ok(h.py <= 86 - 7 + 0.01);
+}));
+test('table tennis: a higher level is harder for the same bot', () => seeded(8, () => {
+  let easy = 0, hard = 0;
+  for(let s = 0; s < 6; s++){ seeded(100 + s, () => { easy += playTennis(1, true).g.you; hard += playTennis(9, true).g.you; }); }
+  assert.ok(easy > hard, `level 1 should lose fewer points than level 9 (${easy} vs ${hard})`);
+}));
+test('table tennis: aimTo glides the paddle at a fixed speed, a key press cancels it, a long hold is faster than a tap', () => seeded(9, () => {
+  const g = new Tennis({ level:1 }); g.aimTo(10); const y0 = g.py; g.update(STEP * 12);
+  assert.ok(g.py < y0 && y0 - g.py < 22, 'moved toward the target, but not instantly');
+  for(let i = 0; i < 240; i++) g.update(STEP); assert.ok(Math.abs(g.py - 13) < .5, 'reached the clamped target');
+  g.aimTo(70); g.key('up'); assert.equal(g.target, null);
+  const h = new Tennis({ level:1 }), y1 = h.py; h.key('down'); for(let i = 0; i < 45; i++) h.update(STEP);
+  assert.ok(h.py - y1 > 70 * 45 * STEP + 3, 'a held key accelerates beyond the starting speed');
+}));

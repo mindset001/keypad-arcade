@@ -7,7 +7,7 @@ const lcd = VT323({ weight: '400', subsets: ['latin'], variable: '--font-lcd', d
 
 export const metadata = {
   title: 'Keypad Arcade — a Demlinks game',
-  description: 'Four classic phone games on one Nokia-style handset: Snake Xenzia, Rapid Roll, Bounce and Soccer League. Play free in your browser. Made by Demlinks.',
+  description: 'Five classic phone games on one Nokia-style handset: Snake Xenzia, Rapid Roll, Bounce, Soccer League and Table Tennis. Play free in your browser. Made by Demlinks.',
   authors: [{ name: 'Demlinks' }],
   creator: 'Demlinks',
   publisher: 'Demlinks',

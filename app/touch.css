@@ -245,6 +245,7 @@
 /* which controls belong to which game */
 .phone[data-scheme=snake] :is(.g-dpad,.g-hint),
 .phone[data-scheme=roll] :is(.g-roll-l,.g-roll-r),
+.phone[data-scheme=tennis] :is(.g-tt-u,.g-tt-d),
 .phone[data-scheme=bounce] :is(.g-lr,.g-bounce),
 .phone[data-scheme=soccer] :is(.g-stick,.g-soccer){display:var(--d, flex)}
 
@@ -267,7 +268,7 @@
 
 .g-lr{--d:flex; gap:12px}
 .g-lr .td-btn{width:calc(var(--td) * 1.3); height:calc(var(--td) * 1.9); border-radius:28px}
-.g-roll-l,.g-roll-r{--d:flex; width:100%; justify-content:center}
+.g-roll-l,.g-roll-r,.g-tt-u,.g-tt-d{--d:flex; width:100%; justify-content:center}
 .td-big{width:min(100%, calc(var(--td) * 2.6)); height:calc(var(--td) * 2.3); border-radius:34px}
 .td-big svg{width:44px; height:44px}
 .g-bounce{--d:flex; flex-direction:column; gap:12px; align-items:center}

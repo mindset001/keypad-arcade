@@ -140,6 +140,7 @@ export default function Arcade() {
             <button className="td-btn tdb-right" data-k="right" data-icon="chevR" tabIndex={-1} aria-label="Right"></button>
             <button className="td-btn tdb-down" data-k="down" data-icon="chevD" tabIndex={-1} aria-label="Down"></button>
           </div>
+          <div className="g g-tt-u"><button className="td-btn td-big" data-k="up" data-icon="chevU" tabIndex={-1} aria-label="Up"></button></div>
           <div className="g g-roll-l"><button className="td-btn td-big" data-k="left" data-icon="chevL" tabIndex={-1} aria-label="Left"></button></div>
           <div className="g g-lr" role="group" aria-label="Move">
             <button className="td-btn" data-k="left" data-icon="chevL" tabIndex={-1} aria-label="Left"></button>
@@ -148,6 +149,7 @@ export default function Arcade() {
           <div className="g g-stick" id="stick" role="application" aria-label="Move stick"><span className="td-knob" id="stickKnob"></span></div>
         </div>
         <div className="td td-right">
+          <div className="g g-tt-d"><button className="td-btn td-big" data-k="down" data-icon="chevD" tabIndex={-1} aria-label="Down"></button></div>
           <div className="g g-roll-r"><button className="td-btn td-big" data-k="right" data-icon="chevR" tabIndex={-1} aria-label="Right"></button></div>
           <div className="g g-hint" aria-hidden="true"><span data-icon="swipe"></span><p>Swipe anywhere on the screen to turn, or use the pad</p></div>
           <div className="g g-bounce">

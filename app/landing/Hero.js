@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react';
 
 /* The hero handset: a CSS-3D phone (stacked slabs give it thickness) that follows the
-   pointer, with a live LCD cycling through small procedural demos of the four games.
+   pointer, with a live LCD cycling through small procedural demos of the five games.
    Purely decorative, so it is aria-hidden and honours prefers-reduced-motion. */
 
 const INK = '#22301b';
@@ -92,11 +92,24 @@ function soccerScene(){
   };
 }
 
+function tennisScene(){
+  return (c, t) => {
+    c.fillRect(0, 4, W, 1); c.fillRect(0, H - 5, W, 1);
+    for(let y = 6; y < H - 6; y += 4) c.fillRect(63, y, 1, 2);
+    const k = (t * .55) % 1, tri = k < .5 ? k * 2 : 2 - k * 2;                 // the ball crosses and comes back
+    const bx = 12 + tri * (W - 26), by = 48 + Math.sin(t * 2.6) * 30;
+    const follow = (y, lag) => Math.max(16, Math.min(H - 16, 48 + Math.sin(t * 2.6 - lag) * 30));
+    c.fillRect(8, Math.round(follow(0, .35) - 8), 2, 16); c.fillRect(W - 10, Math.round(follow(0, .7) - 8), 2, 16);
+    c.fillRect(Math.round(bx), Math.round(by), 3, 3);
+  };
+}
+
 const SCENES = [
   { name:'Snake Xenzia', make:snakeScene },
   { name:'Rapid Roll', make:rollScene },
   { name:'Bounce', make:bounceScene },
-  { name:'Soccer League', make:soccerScene }
+  { name:'Soccer League', make:soccerScene },
+  { name:'Table Tennis', make:tennisScene }
 ];
 const SCENE_SECONDS = 6;
 

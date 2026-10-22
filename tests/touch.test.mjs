@@ -15,7 +15,7 @@ test('first-visit default: touch on phones/tablets, keypad on computers', () => 
 test('control scheme follows the screen and the game state', () => {
   assert.equal(schemeFor('login'), 'none'); assert.equal(schemeFor(null), 'none');
   for(const s of ['menu', 'opts', 'scores', 'help', 'league']) assert.equal(schemeFor(s, 'snake', 'play'), 'menu', s);
-  for(const g of ['snake', 'roll', 'bounce', 'soccer']) assert.equal(schemeFor('game', g, 'play'), g);
+  for(const g of ['snake', 'roll', 'bounce', 'soccer', 'tennis']) assert.equal(schemeFor('game', g, 'play'), g);
   assert.equal(schemeFor('game', 'bounce', 'paused'), 'paused');
   assert.equal(schemeFor('game', 'soccer', 'over'), 'over');
   assert.equal(schemeFor('game', 'unknown', 'play'), 'menu');

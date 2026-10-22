@@ -5,8 +5,8 @@ import Tilt from './landing/Tilt';
 import './landing/landing.css';
 
 export const metadata = {
-  title: 'Keypad Arcade — four classic phone games, one handset',
-  description: 'Snake Xenzia, Rapid Roll, Bounce and Soccer League on a Nokia-style handset. Play free in your browser, climb the leaderboards and win the league. A Demlinks game.',
+  title: 'Keypad Arcade — five classic phone games, one handset',
+  description: 'Snake Xenzia, Rapid Roll, Bounce, Soccer League and Table Tennis on a Nokia-style handset. Play free in your browser, climb the leaderboards and win the league. A Demlinks game.',
 };
 
 const px = { shapeRendering: 'crispEdges' };
@@ -44,6 +44,14 @@ const GAMES = [
       <svg viewBox="0 0 48 32" {...px}><path fill="currentColor" d="M2 2h44v1H2zM2 29h44v1H2zM2 2h1v28H2zM45 2h1v28h-1zM23 2h2v28h-2zM2 11h8v1H2zM2 20h8v1H2zM9 11h1v10H9zM38 11h8v1h-8zM38 20h8v1h-8zM38 11h1v10h-1z"/><path fill="currentColor" d="M12 13h3v3h-3zM12 20h3v3h-3zM18 16h3v3h-3zM30 10h3v3h-3zM33 20h3v3h-3z"/><path fill="var(--accent)" d="M26 15h1v3h-1zM25 16h3v1h-3z"/></svg>
     ),
   },
+  {
+    id: 'tennis', name: 'Table Tennis', tag: 'First to 7. Beat the CPU.',
+    text: 'A quick one-on-one rally against the computer. Move your paddle, return every ball and use the edge of the paddle to send it at a sharper angle. The ball speeds up with each return. First to seven points wins, and nine levels make the computer sharper.',
+    tips: ['Up and down move your paddle', 'Hit with the edge for a steeper angle', 'Higher levels score more'],
+    art: (
+      <svg viewBox="0 0 48 32" {...px}><path fill="currentColor" d="M2 3h44v1H2zM2 28h44v1H2zM23 5h2v2h-2zM23 10h2v2h-2zM23 15h2v2h-2zM23 20h2v2h-2zM23 25h2v2h-2zM6 11h2v10H6zM40 9h2v10h-2z"/><path fill="var(--coral)" d="M29 14h3v3h-3z"/></svg>
+    ),
+  },
 ];
 
 const FEATURES = [
@@ -74,10 +82,10 @@ export default function Landing() {
         <section className="lp-hero">
           <div className="lp-hero-copy">
             <p className="lp-eyebrow">A Demlinks game</p>
-            <h1>Four classic phone games.<br /><span>One handset.</span></h1>
+            <h1>Five classic phone games.<br /><span>One handset.</span></h1>
             <p className="lp-lede">
               Remember the monochrome screen, the chunky keypad and the one game you could not put down?
-              Keypad Arcade packs Snake, Rapid Roll, Bounce and a brand-new Soccer League into a little
+              Keypad Arcade packs Snake, Rapid Roll, Bounce, Soccer League and a brand-new Table Tennis into a little
               Nokia-style phone that runs right in your browser. Free to play, no download.
             </p>
             <div className="lp-cta">
@@ -89,7 +97,7 @@ export default function Landing() {
               <Link href="/play?controls=touch">Touch screen</Link>
             </p>
             <ul className="lp-badges" aria-label="Highlights">
-              <li>4 games</li><li>Keyboard and touch</li><li>Leaderboards</li><li>Free</li>
+              <li>5 games</li><li>Keyboard and touch</li><li>Leaderboards</li><li>Free</li>
             </ul>
           </div>
           <Hero />

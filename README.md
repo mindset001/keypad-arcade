@@ -1,6 +1,6 @@
 # Keypad Arcade
 
-Four classic phone games on one Nokia-style handset, in the browser: **Snake Xenzia**, **Rapid Roll**, **Bounce** and **Soccer League** (quick match or a six-club league). Play as a guest, or make a player to keep your scores, league season and handset colour on any device. A Demlinks game.
+Five classic phone games on one Nokia-style handset, in the browser: **Snake Xenzia**, **Rapid Roll**, **Bounce**, **Soccer League** and **Table Tennis** (quick match or a six-club league). Play as a guest, or make a player to keep your scores, league season and handset colour on any device. A Demlinks game.
 
 - `/` is the 3D landing page. `/play` is the game.
 - Next.js (App Router) · MongoDB + Mongoose · no UI framework: the games are plain canvas code.
@@ -50,7 +50,7 @@ app/
 lib/
   arcade/                  the game engine (runs in the browser)
     index.js                 screens, input, game loop, auth wiring
-    games/{snake,roll,bounce,soccer}.js   one file per game
+    games/{snake,roll,bounce,soccer,tennis}.js   one file per game
     league.js                Soccer League season logic (pure)
     ui/                      the touch app: touch-ui.js (screens), icons.js, art.js, dom.js
     touch.js                 touch logic + the pre-paint script (pure, tested)
@@ -95,7 +95,7 @@ The choice is saved **on that device** (not on the account), so you can use touc
   - **Game options:** a bottom sheet with a level stepper, maze chips (Snake), quick/league mode (Soccer) and a big Play button.
   - **Scores, How to play, League, Login:** proper screens (ranked list with medals and a "just me" filter; the league table with your club highlighted; a form with floating labels and a show/hide eye).
   - **Settings** (gear): Controls (Keypad | Touch), handset colour swatches, sound, and sign in / log out.
-  - **In a game:** the screen sits in a glowing frame with a glass control sheet below. Snake: swipe anywhere, or the round pad. Rapid Roll: a big button under each thumb. Bounce: left/right, plus HIGH and LOW. Soccer: an eight-way joystick and a KICK button (tap to pass or tackle, hold to shoot). Pause is in the app bar; **Paused** and **Game over** are real dialogs (Resume / Quit; Again / Share / Menu). Back (the arrow, or Esc) pauses mid-game, and dismisses the Paused dialog like Android's back button.
+  - **In a game:** the screen sits in a glowing frame with a glass control sheet below. Snake: swipe anywhere, or the round pad. Rapid Roll: a big button under each thumb. Bounce: left/right, plus HIGH and LOW. Soccer: an eight-way joystick and a KICK button (tap to pass or tackle, hold to shoot). Table Tennis: drag a finger up and down on the screen and the paddle follows (it glides, it cannot teleport), or use the big ▲ under one thumb and ▼ under the other. On a computer the mouse over the screen also moves the paddle, and held keys speed up the longer you hold them. Pause is in the app bar; **Paused** and **Game over** are real dialogs (Resume / Quit; Again / Share / Menu). Back (the arrow, or Esc) pauses mid-game, and dismisses the Paused dialog like Android's back button.
   - **Landscape:** on short screens the game screen is sized by the height and centred, with the controls on its left and right; home, sheets and login rearrange so everything fits without scrolling. Larger screens keep the controls below.
   - Every button is 44px or bigger, holds are tracked per finger (a thumb that slides off a held button doesn't drop it), phones give a tiny vibration while sound is on, and presses have a soft ripple.
 
@@ -126,7 +126,7 @@ Everyone who is not an admin (logged out or an ordinary player) gets the normal 
 
 ## Tests
 
-`npm test` covers the parts that are pure logic: league fixtures and standings, all four games run headlessly (level data, physics, scoring rules, whole matches with a bot, difficulty ordering), and the share helper. Soccer's difficulty test plays seeded matches, so it is deterministic.
+`npm test` covers the parts that are pure logic: league fixtures and standings, all five games run headlessly (level data, physics, scoring rules, whole matches with a bot, difficulty ordering), and the share helper. Soccer's difficulty test plays seeded matches, so it is deterministic.
 
 `npm run smoke` covers the API (validation, sessions, cookies, scores, league, colours, health). It needs a running server and a database. `SMOKE_RATELIMIT=1 npm run smoke` also checks the lockout (it deliberately locks one throwaway player for 15 minutes).
 
