@@ -54,11 +54,12 @@ lib/
     league.js                Soccer League season logic (pure)
     ui/                      the touch app: touch-ui.js (screens), icons.js, art.js, dom.js
     touch.js                 touch logic + the pre-paint script (pure, tested)
+    online.js                 peer-to-peer match connection (WebRTC) for online play
     share.js, data.js, draw.js, storage.js, sound.js, api.js
   api.js, auth.js, db.js   server helpers (route wrapper, sessions, Mongo connection)
   admin.js, admin-guard.js admin list helpers (pure) and the admin check
   limits.js, ratelimit.js  login / sign-up limiting
-models/                    Mongoose: User, Score, League
+models/                    Mongoose: User, Score, League, Room, RateLimit
 tests/                     unit tests
 scripts/smoke-api.sh       API smoke test
 scripts/make-admin.mjs     grants/removes the admin role (database access required)
@@ -101,6 +102,16 @@ The choice is saved **on that device** (not on the account), so you can use touc
 
 The keyboard works in both modes. The logic (joystick angles, swipe detection, which controls to show, the default choice) is in `lib/arcade/touch.js` and unit-tested. The touch screens are `lib/arcade/ui/touch-ui.js` (views), `ui/icons.js`, `ui/art.js` and `ui/dom.js`; they reuse the engine's own scores, league, sign-in and preferences (nothing is duplicated). All touch styling is in `app/touch.css`, scoped to `:root[data-controls=touch]` so the keypad layout is untouched.
 
+### Online play (Table Tennis and Soccer, 1 v 1)
+
+From a game's options choose **Play online** (or **Play a friend online** in touch mode). One player **opens a room** and shares its 4-letter code; the other types it under **join a friend**. When the second player joins, the match starts. It works for guests and signed-in players alike.
+
+- **Peer to peer.** The two browsers talk directly (WebRTC data channels). The server only passes the first handshake (`/api/rooms`, one short-lived `Room` document per open room, deleted when it is used and expired after 15 minutes), because Vercel cannot hold live connections open. No new service or key is needed.
+- **The host runs the game.** The host plays the left paddle (Table Tennis) or team 0 (Soccer) and sends the game state about 30 times a second; the guest sends their key presses and draws what arrives. In Soccer you each drive one player (whoever is nearest the ball, or has it); goalkeepers and the rest of each team are the computer.
+- **No pause, no leaderboard.** An online match cannot be paused, and it does not post to the leaderboards. Leaving (Back/Esc) ends the match and tells your friend. Results show "You win / You lose / Draw".
+- **Limits.** Opening a room is limited to 20 per address per hour, lookups to 60. Codes avoid look-alike characters (no 0/O/1/I/L).
+- **When it will not connect.** Browsers use free public STUN servers to find each other. A few networks (some corporate or campus Wi-Fi, some mobile carriers) block direct connections and would need a relay (TURN) server, which this project does not run: the dialog says "Could not connect to your friend" and the players can try another network.
+
 ### Admin page
 
 `/admin` lists every registered player: name, join date, last login, handset colour, how many scores they have posted and their best. It has totals, name search, sorting, paging and a **Download CSV** button. It is read-only: it cannot change or delete anyone. No emails or passwords are stored, so none can be shown.
@@ -128,7 +139,7 @@ Everyone who is not an admin (logged out or an ordinary player) gets the normal 
 
 `npm test` covers the parts that are pure logic: league fixtures and standings, all five games run headlessly (level data, physics, scoring rules, whole matches with a bot, difficulty ordering), and the share helper. Soccer's difficulty test plays seeded matches, so it is deterministic.
 
-`npm run smoke` covers the API (validation, sessions, cookies, scores, league, colours, health). It needs a running server and a database. `SMOKE_RATELIMIT=1 npm run smoke` also checks the lockout (it deliberately locks one throwaway player for 15 minutes).
+`npm run smoke` covers the API (validation, sessions, cookies, scores, league, colours, online rooms, health). It needs a running server and a database. `SMOKE_RATELIMIT=1 npm run smoke` also checks the lockout (it deliberately locks one throwaway player for 15 minutes).
 
 Not covered by automation: the visuals and touch feel. Check those by hand on a real phone: sign up, play each game, share a score, switch handset colour, and reload.
 

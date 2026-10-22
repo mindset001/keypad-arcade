@@ -164,6 +164,28 @@ export default function Arcade() {
 
       <p className="hint">Move with <kbd>←</kbd><kbd>↑</kbd><kbd>→</kbd><kbd>↓</kbd> or <kbd>2</kbd><kbd>4</kbd><kbd>6</kbd><kbd>8</kbd>. <kbd>Enter</kbd> or <kbd>5</kbd> selects, <kbd>Esc</kbd> goes back, <kbd>P</kbd> pauses, <kbd>M</kbd> mutes, <kbd>H</kbd> shares your score after a game. On a phone, use Controls in the menu to switch between this keypad and full-screen touch.</p>
 
+      {/* Online play: open a room or join one with a code. Shown by the engine from a game's options. */}
+      <div className="chooser" id="online" role="dialog" aria-modal="true" aria-labelledby="onTitle" hidden>
+        <div className="chooser-card on-card">
+          <h2 id="onTitle">Play online: <span id="onGame"></span></h2>
+          <p id="onMsg" role="status"></p>
+          <div id="onStart">
+            <button type="button" className="on-btn on-primary" id="onCreate">Open a room</button>
+            <p className="on-or">or join a friend</p>
+            <form className="on-join" id="onJoinForm" noValidate>
+              <input id="onCode" name="code" placeholder="CODE" aria-label="Room code" maxLength={4} autoCapitalize="characters" autoComplete="off" autoCorrect="off" spellCheck={false} />
+              <button type="submit" className="on-btn" id="onJoin">Join</button>
+            </form>
+          </div>
+          <div id="onWait" hidden>
+            <div className="on-big" id="onBigCode" aria-live="polite"></div>
+            <button type="button" className="on-btn" id="onCopy">Copy code</button>
+          </div>
+          <div id="onBusy" hidden><div className="on-spin" aria-hidden="true"></div></div>
+          <button type="button" className="on-link" id="onCancel">Cancel</button>
+        </div>
+      </div>
+
       {/* First visit: choose how to play. Shown by the engine until a choice is saved. */}
       <div className="chooser" id="chooser" role="dialog" aria-modal="true" aria-labelledby="chooserTitle" hidden>
         <div className="chooser-card">

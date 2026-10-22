@@ -222,3 +222,34 @@ test('table tennis: aimTo glides the paddle at a fixed speed, a key press cancel
   const h = new Tennis({ level:1 }), y1 = h.py; h.key('down'); for(let i = 0; i < 45; i++) h.update(STEP);
   assert.ok(h.py - y1 > 70 * 45 * STEP + 3, 'a held key accelerates beyond the starting speed');
 }));
+
+/* ---------------- online play (host-authoritative; see lib/arcade/online.js) ---------------- */
+import { cleanCode, makeCode, validSdp, validName, CODE_LEN } from '../lib/rooms.js';
+const SoccerOn = Soccer;
+test('rooms: codes are 4 characters, typed codes are cleaned, junk is refused', () => {
+  for(let i = 0; i < 200; i++){ const c = makeCode(); assert.equal(c.length, CODE_LEN); assert.equal(cleanCode(c.toLowerCase()), c); assert.ok(!/[01OIL]/.test(c)); }
+  assert.equal(cleanCode(' ab-cd '), 'ABCD'); assert.equal(cleanCode('ABC'), ''); assert.equal(cleanCode('ABCDE'), ''); assert.equal(cleanCode('AB0D'), ''); assert.equal(cleanCode(null), '');
+  assert.ok(validSdp('v=0\r\n' + 'a'.repeat(30))); assert.ok(!validSdp('hello')); assert.ok(!validSdp('v=0' + 'a'.repeat(20000)));
+  assert.ok(validName('Guest') && validName('a_b2') && !validName('x') && !validName('has space') && !validName('waytoolongname1'));
+});
+test('table tennis online: the guest\'s keys move the right paddle, and a snapshot reproduces the host\'s picture', () => seeded(3, () => {
+  const host = new Tennis({ level:3, online:{ role:'host' } }), guest = new Tennis({ level:3, online:{ role:'guest' } });
+  host.key2('up'); for(let i = 0; i < 120; i++) host.update(STEP); assert.ok(host.cy < 40, 'the right paddle follows the guest, not the computer');
+  host.keyUp2('up'); const y = host.cy; for(let i = 0; i < 240; i++) host.update(STEP); assert.equal(host.cy, y, 'and stays put when the guest lets go (no computer takes over)');
+  guest.applyState(host.snapshot()); for(let i = 0; i < 60; i++) guest.update(STEP);
+  assert.ok(Math.abs(guest.cy - host.cy) < .6 && Math.abs(guest.py - host.py) < .6);
+  let over = null; guest.onOver = () => { over = 'done'; }; guest.finish(7, 3); assert.equal(over, 'done'); assert.ok(!guest.won, 'the host won 7-3, so the guest did not'); guest.finish(1, 1);
+  assert.deepEqual(guest.hud()[0], '3-7');
+}));
+test('soccer online: the guest drives a team-1 player, shoots with key2/keyUp2, and the snapshot round-trips', () => seeded(11, () => {
+  const host = new SoccerOn({ level:3, mode:0, online:{ role:'host' } }), guest = new SoccerOn({ level:3, mode:0, online:{ role:'guest' } });
+  for(let i = 0; i < 120 * 2; i++) host.update(STEP);                      // past kick-off
+  assert.equal(host.phase, 'play'); const c2 = host.ctl2, x0 = c2.x;
+  host.key2('left'); for(let i = 0; i < 60; i++) host.update(STEP); assert.ok(host.ctl2.x < x0 || host.ctl2 !== c2, 'team 1\'s driven player runs left (toward its attack)');
+  host.keyUp2('left');
+  const s = JSON.parse(JSON.stringify(host.snapshot())); assert.ok(JSON.stringify(s).length < 1000, 'small enough to send 30 times a second');
+  guest.applyState(s); for(let i = 0; i < 120; i++) guest.update(STEP);
+  assert.deepEqual(guest.goals, host.goals); assert.equal(guest.phase, host.phase);
+  assert.ok(Math.abs(guest.players[9].x - host.players[9].x) < 1 && Math.abs(guest.ball.x - host.ball.x) < 1);
+  assert.equal(guest.hud()[0], '0-0'); let end = false; guest.onOver = () => { end = true; }; guest.finish(1, 2); assert.ok(end); assert.deepEqual(guest.hud()[0], '2-1');
+}));

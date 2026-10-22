@@ -236,3 +236,21 @@ body{background-color:var(--desk); color:var(--desk-ink-hi); font-family:var(--f
   :root:not([data-controls=touch]) .key{height:34px; border-radius:12px 12px 15px 15px}
   :root:not([data-controls=touch]) .key small{display:none}
 }
+
+/* ---------- online play dialog (shares the chooser's backdrop and card) ---------- */
+.on-card{width:min(440px,100%); text-align:center}
+.on-card h2{font-size:14px}
+.on-btn{font:700 15px var(--f-ui); min-height:48px; padding:0 22px; border:0; border-radius:14px; cursor:pointer; color:var(--desk-ink-hi); background:rgba(255,255,255,.1); box-shadow:inset 0 0 0 1px rgba(160,172,255,.3)}
+.on-btn:hover{background:rgba(255,255,255,.16)}
+.on-primary{width:100%; color:#05241a; background:linear-gradient(180deg,#5fe0b0,#2a9d77); box-shadow:none}
+.on-primary:hover{filter:brightness(1.08); background:linear-gradient(180deg,#5fe0b0,#2a9d77)}
+.on-or{margin:18px 0 10px !important; font-size:12px !important; letter-spacing:.12em; text-transform:uppercase; opacity:.8}
+.on-join{display:flex; gap:10px}
+.on-join input{flex:1; min-width:0; text-align:center; text-transform:uppercase; font:700 22px var(--f-pixel); letter-spacing:.3em; padding:0 8px; min-height:48px; border-radius:14px; border:0; color:var(--desk-ink-hi); background:rgba(0,0,0,.35); box-shadow:inset 0 0 0 1px rgba(160,172,255,.3)}
+.on-join input:focus{outline:3px solid #fff; outline-offset:2px}
+.on-big{font:400 44px var(--f-pixel); letter-spacing:.25em; margin:6px 0 18px; padding-left:.25em; color:var(--accent)}
+.on-link{margin-top:18px; background:none; border:0; color:var(--desk-ink); font:600 14px var(--f-ui); text-decoration:underline; text-underline-offset:3px; cursor:pointer; min-height:44px; padding:0 14px}
+.on-spin{width:34px; height:34px; margin:6px auto; border-radius:50%; border:4px solid rgba(255,255,255,.2); border-top-color:var(--accent); animation:on-spin .8s linear infinite}
+@keyframes on-spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion: reduce){ .on-spin{animation-duration:2.4s} }
+@media (orientation:landscape) and (max-height:520px){ .on-card{padding:16px 20px} .on-card p{margin-bottom:10px} .on-big{font-size:32px; margin-bottom:10px} }

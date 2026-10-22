@@ -70,6 +70,23 @@ check "non-JSON POST rejected"            '[415]' -X POST -d 'x=1' $API/auth/log
 check "logout"                            '{"ok":true}' -X POST -c "$JAR" -b "$JAR" $API/auth/logout
 check "me after logout"                   '{"user":null}' -b "$JAR" $API/auth/me
 
+
+# online rooms (only the WebRTC handshake passes through the server)
+SDP='v=0\\r\\na=smoke-offer-0123456789'
+RM=$(curl -s "${J[@]}" -d "{\"game\":\"tennis\",\"name\":\"$NAME\",\"offer\":\"$SDP\"}" $API/rooms)
+CODE=$(echo "$RM" | sed -n 's/.*"code":"\([A-Z0-9]*\)".*/\1/p'); TOK=$(echo "$RM" | sed -n 's/.*"token":"\([a-f0-9]*\)".*/\1/p')
+[ ${#CODE} = 4 ] && { PASS=$((PASS+1)); echo "ok    room: opened ($CODE)"; } || { FAIL=$((FAIL+1)); echo "FAIL  room: no code in $RM"; }
+check "room: bad game refused"            '[400]' "${J[@]}" -d "{\"game\":\"snake\",\"name\":\"$NAME\",\"offer\":\"$SDP\"}" $API/rooms
+check "room: bad connection data refused" '[400]' "${J[@]}" -d "{\"game\":\"tennis\",\"name\":\"$NAME\",\"offer\":\"nope\"}" $API/rooms
+check "room: a friend can look it up"     '"hostName":"'"$NAME"'"' $API/rooms/$(echo $CODE | tr A-Z a-z)
+check "room: unknown code is 404"         '[404]' $API/rooms/ZZZZ
+check "room: the first answer wins"       '[201]' "${J[@]}" -d "{\"name\":\"$NAME2\",\"answer\":\"$SDP\"}" $API/rooms/$CODE
+check "room: a second answer is refused"  '[409]' "${J[@]}" -d "{\"name\":\"$NAME2\",\"answer\":\"$SDP\"}" $API/rooms/$CODE
+check "room: the host sees the answer"    '"guestName":"'"$NAME2"'"' $API/rooms/$CODE
+check "room: the wrong token cannot close it" '[403]' -X DELETE "${J[@]}" -d '{"token":"nope"}' $API/rooms/$CODE
+check "room: the host can close it"       '{"ok":true}' -X DELETE "${J[@]}" -d "{\"token\":\"$TOK\"}" $API/rooms/$CODE
+check "room: closed rooms are gone"       '[404]' $API/rooms/$CODE
+
 # Opt-in: locks ONE throwaway player for 15 minutes, so it is off by default.  SMOKE_RATELIMIT=1 npm run smoke
 if [ "$SMOKE_RATELIMIT" = 1 ]; then
   VICTIM="smoke$RANDOM"; curl -s "${J[@]}" -d "{\"name\":\"$VICTIM\",\"password\":\"secret1\"}" $API/auth/register >/dev/null
