@@ -1,4 +1,5 @@
 import { route, body, json, HttpError } from '@/lib/api';
+import mongoose from 'mongoose';
 import Score, { GAME_IDS } from '@/models/Score';
 
 const MAX_SCORE = 1_000_000, KEEP_PER_PLAYER = 50;
@@ -8,9 +9,14 @@ const gameOf = v => { if(!GAME_IDS.includes(v)) throw new HttpError(400, 'Unknow
 /* GET /api/scores?game=snake[&mine=1] -> top 10 (everyone, or just the signed-in player) + their best */
 export const GET = route(async (request, session) => {
   const q = request.nextUrl.searchParams, game = gameOf(q.get('game'));
-  const filter = { game };
-  if(q.get('mine') === '1'){ if(!session) throw new HttpError(401, 'Log in first.'); filter.user = session.id; }
-  const rows = await Score.find(filter).sort({ score:-1, createdAt:1 }).limit(10).select('name score -_id').lean();
+  const match = { game };
+  if(q.get('mine') === '1'){ if(!session) throw new HttpError(401, 'Log in first.'); match.user = new mongoose.Types.ObjectId(session.id); }
+  /* one row per player: only their highest score is shown (older, lower ones stay in the database, hidden) */
+  const rows = await Score.aggregate([
+    { $match:match }, { $sort:{ score:-1, createdAt:1 } },
+    { $group:{ _id:'$user', name:{ $first:'$name' }, score:{ $first:'$score' }, createdAt:{ $first:'$createdAt' } } },
+    { $sort:{ score:-1, createdAt:1 } }, { $limit:10 }, { $project:{ _id:0, name:1, score:1 } }
+  ]);
   const top = session ? await Score.findOne({ game, user:session.id }).sort({ score:-1 }).select('score').lean() : null;
   return json({ scores:rows, best:top ? top.score : 0 });
 });

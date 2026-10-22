@@ -177,3 +177,11 @@ test('soccer: higher levels are harder (same bot, same seeds)', () => {
   assert.ok(easy > hard + 1, `level 9 should be clearly harder (${easy} vs ${hard})`);
   assert.ok(hard < 1, `level 9 must not be a pushover: the bot should not win by much (avg goal difference ${hard})`);
 });
+
+import { bestPerPlayer } from '../lib/arcade/scores.js';
+test('scores: one row per player, their highest, best first', () => {
+  const rows = bestPerPlayer([{ name:'Ada', score:50, at:1 }, { name:'ada', score:90, at:2 }, { name:'Bo', score:70, at:3 }, { name:'Ada', score:90, at:4 }]);
+  assert.deepEqual(rows.map(r => [r.name.toLowerCase(), r.score]), [['ada', 90], ['bo', 70]]);
+  assert.equal(rows[0].at, 2);
+  assert.deepEqual(bestPerPlayer(null), []);
+});
